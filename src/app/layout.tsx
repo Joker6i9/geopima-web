@@ -16,7 +16,7 @@ export const metadata: Metadata = {
   title: { default: "GeoPima", template: "%s · GeoPima" },
   description: "Property management for agencies, landlords and tenants.",
   // Stops the Dark Reader extension rewriting SVGs before hydration (causes mismatch errors).
-  other: { "darkreader-lock": "" },
+  other: { "darkreader-lock": "true" },
 };
 
 export default function RootLayout({ children }: LayoutProps<"/">) {
