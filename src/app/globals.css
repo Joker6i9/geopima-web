@@ -7,7 +7,7 @@
 @theme inline {
   --color-background: var(--background);
   --color-foreground: var(--foreground);
-  --font-sans: var(--font-sans);
+  --font-sans: var(--font-geist-sans), ui-sans-serif, system-ui, sans-serif;
   --font-mono: var(--font-geist-mono);
   --font-heading: var(--font-sans);
   --color-sidebar-ring: var(--sidebar-ring);
@@ -126,6 +126,8 @@
   }
   html {
     @apply font-sans;
+    /* Scales every rem-based size (text and spacing) up from the 16px default. */
+    font-size: 112.5%;
   }
 }
 /* GeoPima brand: navy primary, teal accent */
