@@ -15,6 +15,8 @@ const geistMono = Geist_Mono({
 export const metadata: Metadata = {
   title: { default: "GeoPima", template: "%s · GeoPima" },
   description: "Property management for agencies, landlords and tenants.",
+  // Stops the Dark Reader extension rewriting SVGs before hydration (causes mismatch errors).
+  other: { "darkreader-lock": "" },
 };
 
 export default function RootLayout({ children }: LayoutProps<"/">) {
