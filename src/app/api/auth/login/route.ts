@@ -1,7 +1,10 @@
 import { NextResponse } from "next/server";
 import { z } from "zod";
-import { API_URL, isDemo } from "@/lib/api";
+import { API_URL, isDemo } from "@/lib/env";
+import { isRole } from "@/lib/roles";
 import { setSession } from "@/lib/session";
+import { DEMO_LANDLORD_ID, DEMO_TENANT_ID } from "@/lib/mock/seed";
+import type { Role } from "@/lib/types";
 
 const schema = z.object({ username: z.string().min(1), password: z.string().min(1) });
 
@@ -12,8 +15,12 @@ export async function POST(request: Request) {
   }
 
   if (isDemo) {
-    await setSession("demo-token");
-    return NextResponse.json({ ok: true });
+    // Demo: the username picks the portal. Anything else signs in as staff.
+    const name = parsed.data.username.toLowerCase();
+    const role: Role = name === "tenant" ? "tenant" : name === "landlord" ? "landlord" : "admin";
+    const profileId = role === "tenant" ? DEMO_TENANT_ID : role === "landlord" ? DEMO_LANDLORD_ID : null;
+    await setSession({ access: "demo-token", role, profileId });
+    return NextResponse.json({ ok: true, role });
   }
 
   let res: Response;
@@ -31,6 +38,18 @@ export async function POST(request: Request) {
   if (!res.ok) {
     return NextResponse.json({ detail: data.detail ?? "Invalid credentials." }, { status: res.status });
   }
-  await setSession(data.access, data.refresh);
-  return NextResponse.json({ ok: true });
+
+  // The `/me/` endpoint is part of the proposed backend changes; until it exists, treat the account as staff.
+  let role: Role = "admin";
+  let profileId: number | null = null;
+  const me = await fetch(`${API_URL}/me/`, { headers: { Authorization: `Bearer ${data.access}` } })
+    .then((r) => (r.ok ? r.json() : null))
+    .catch(() => null);
+  if (me && isRole(me.role)) {
+    role = me.role;
+    profileId = me.tenant_id ?? me.landlord_id ?? null;
+  }
+
+  await setSession({ access: data.access, refresh: data.refresh, role, profileId });
+  return NextResponse.json({ ok: true, role });
 }
