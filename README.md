@@ -1,36 +1,36 @@
-This is a [Next.js](https://nextjs.org) project bootstrapped with [`create-next-app`](https://nextjs.org/docs/app/api-reference/cli/create-next-app).
+# GeoPima Web
 
-## Getting Started
+Next.js frontend for the GeoPima property management platform. It replaces the legacy static HTML pages and talks to the existing Django REST API.
 
-First, run the development server:
+Design documents are in [`docs/`](docs): [`DESIGN.md`](docs/DESIGN.md) (architecture, use cases, class diagram) and [`CURRENT_STATE_REVIEW.md`](docs/CURRENT_STATE_REVIEW.md).
+
+## Run it
 
 ```bash
-npm run dev
-# or
-yarn dev
-# or
-pnpm dev
-# or
-bun dev
+npm install
+npm run dev        # http://localhost:3000
 ```
 
-Open [http://localhost:3000](http://localhost:3000) with your browser to see the result.
+With no `GEOPIMA_API_URL` set, the app runs on a built-in demo dataset. The login page has one-click demo accounts for each portal.
 
-You can start editing the page by modifying `app/page.tsx`. The page auto-updates as you edit the file.
+| Portal | Path | Who |
+|---|---|---|
+| Agency console | `/admin` | Staff: landlords, properties, units, tenants, invoices, M-Pesa, deposits, finance, configuration |
+| Tenant portal | `/tenant` | Balance and due date, invoices, payment history, how to pay, lease |
+| Landlord portal | `/landlord` | Own properties, occupancy, monthly statements after commission |
 
-This project uses [`next/font`](https://nextjs.org/docs/app/building-your-application/optimizing/fonts) to automatically optimize and load [Geist](https://vercel.com/font), a new font family for Vercel.
+## Structure
 
-## Learn More
+```
+src/app/(auth)        login
+src/app/(admin|tenant|landlord)/<portal>   one route group and shell per role
+src/app/api/auth      login and logout route handlers (httpOnly cookies)
+src/proxy.ts          optimistic role-based route guard
+src/lib/repo/*        data access per role; every call re-checks the session role
+src/lib/mock/*        demo dataset and query helpers (swap for Django calls)
+src/components/shared reusable tables, badges, charts, filter bar
+```
 
-To learn more about Next.js, take a look at the following resources:
+## Connecting to Django
 
-- [Next.js Documentation](https://nextjs.org/docs) - learn about Next.js features and API.
-- [Learn Next.js](https://nextjs.org/learn) - an interactive Next.js tutorial.
-
-You can check out [the Next.js GitHub repository](https://github.com/vercel/next.js) - your feedback and contributions are welcome!
-
-## Deploy on Vercel
-
-The easiest way to deploy your Next.js app is to use the [Vercel Platform](https://vercel.com/new?utm_medium=default-template&filter=next.js&utm_source=create-next-app&utm_campaign=create-next-app-readme) from the creators of Next.js.
-
-Check out our [Next.js deployment documentation](https://nextjs.org/docs/app/building-your-application/deploying) for more details.
+Set `GEOPIMA_API_URL` (see `.env.example`). Login already exchanges credentials for a JWT at `/token/` and reads the role from `/me/`. The data functions in `src/lib/repo` still return demo data; replacing their bodies with API calls is the next step and depends on the backend changes listed in `docs/DESIGN.md` (section 8).
