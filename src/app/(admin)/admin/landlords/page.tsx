@@ -1,5 +1,8 @@
 import type { Metadata } from "next";
 import Link from "next/link";
+import { adminSections } from "@/components/layout/nav";
+import { SectionTabs } from "@/components/shared/section-tabs";
+import { AddLandlordDialog } from "@/components/admin/dialogs";
 import { PageHeader } from "@/components/shared/page-header";
 import { StatusBadge } from "@/components/shared/status-badge";
 import { Card, CardContent } from "@/components/ui/card";
@@ -9,11 +12,15 @@ import { getLandlords } from "@/lib/repo/admin";
 
 export const metadata: Metadata = { title: "Landlords" };
 
+// Reads the signed-in user's data from Django, so navigating here may wait for it.
+export const instant = false;
+
 export default async function LandlordsPage() {
   const rows = await getLandlords();
   return (
     <>
-      <PageHeader title="Landlords" description={`${rows.length} landlords`} />
+      <SectionTabs tabs={adminSections.people} current="/admin/landlords" label="People" />
+      <PageHeader title="Landlords" description={`${rows.length} landlords`} actions={<AddLandlordDialog />} />
       <Card>
         <CardContent className="pt-6">
           <Table>

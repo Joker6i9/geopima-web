@@ -1,7 +1,6 @@
 import type { Metadata } from "next";
 import { Building } from "lucide-react";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
-import { isDemo } from "@/lib/env";
 import { LoginForm } from "./login-form";
 
 export const metadata: Metadata = { title: "Sign in" };
@@ -16,7 +15,7 @@ export default function LoginPage() {
           <CardDescription>Sign in to manage your properties</CardDescription>
         </CardHeader>
         <CardContent>
-          <LoginForm demo={isDemo} />
+          <LoginForm />
         </CardContent>
       </Card>
     </main>

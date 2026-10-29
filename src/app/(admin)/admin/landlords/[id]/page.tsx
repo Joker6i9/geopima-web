@@ -1,15 +1,19 @@
 import type { Metadata } from "next";
 import Link from "next/link";
 import { notFound } from "next/navigation";
+import { AddPropertyDialog } from "@/components/admin/dialogs";
 import { PageHeader } from "@/components/shared/page-header";
 import { DetailList } from "@/components/shared/detail-list";
 import { StatusBadge } from "@/components/shared/status-badge";
-import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
+import { Card, CardAction, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table";
 import { kes, phone } from "@/lib/format";
 import { getLandlord } from "@/lib/repo/admin";
 
 export const metadata: Metadata = { title: "Landlord" };
+
+// Reads the signed-in user's data from Django, so navigating here may wait for it.
+export const instant = false;
 
 export default async function LandlordPage({ params }: { params: Promise<{ id: string }> }) {
   const data = await getLandlord(Number((await params).id));
@@ -29,7 +33,7 @@ export default async function LandlordPage({ params }: { params: Promise<{ id: s
         </CardContent>
       </Card>
       <Card className="mt-4">
-        <CardHeader><CardTitle>Properties</CardTitle></CardHeader>
+        <CardHeader><CardTitle>Properties</CardTitle><CardAction><AddPropertyDialog landlords={[{ id: l.id, name: l.name }]} landlordId={String(l.id)} /></CardAction></CardHeader>
         <CardContent>
           <Table>
             <TableHeader>

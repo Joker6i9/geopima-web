@@ -8,15 +8,18 @@ import { StatusBadge } from "@/components/shared/status-badge";
 import { buttonVariants } from "@/components/ui/button";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { fmtDate, fmtDateTime, kes } from "@/lib/format";
-import { TODAY } from "@/lib/mock/seed";
+import { today } from "@/lib/dates";
 import { getHome } from "@/lib/repo/tenant";
 
 export const metadata: Metadata = { title: "Home" };
 
+// Reads the signed-in user's data from Django, so navigating here may wait for it.
+export const instant = false;
+
 export default async function TenantHome() {
   const h = await getHome();
   const { tenant: t, nextDue, balance } = h;
-  const late = nextDue && nextDue.dueDate < TODAY;
+  const late = nextDue && nextDue.dueDate < today();
 
   return (
     <>

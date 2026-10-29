@@ -3,10 +3,10 @@ import { EmptyRow } from "@/components/shared/empty-row";
 import { StatusBadge } from "@/components/shared/status-badge";
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table";
 import { fmtDate, kes } from "@/lib/format";
-import { periodLabel } from "@/lib/mock/queries";
+import { periodLabel } from "@/lib/dates";
 
 interface Row {
-  id: number; number: string; period: string; dueDate: string; total: number; paid: number; balance: number;
+  id: string; number: string; period: string; dueDate: string; total: number; paid: number; balance: number;
   status: string; tenantName: string; unitName: string; propertyName: string;
 }
 

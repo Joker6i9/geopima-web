@@ -7,8 +7,11 @@ import { getMyInvoice } from "@/lib/repo/tenant";
 
 export const metadata: Metadata = { title: "Invoice" };
 
+// Reads the signed-in user's data from Django, so navigating here may wait for it.
+export const instant = false;
+
 export default async function TenantInvoice({ params }: { params: Promise<{ id: string }> }) {
-  const detail = await getMyInvoice(Number((await params).id));
+  const detail = await getMyInvoice((await params).id);
   return (
     <>
       <Link href="/tenant/invoices" className={buttonVariants({ variant: "ghost", size: "sm", className: "mb-4" })}>

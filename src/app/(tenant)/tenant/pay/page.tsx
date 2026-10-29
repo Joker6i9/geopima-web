@@ -7,6 +7,9 @@ import { getHome } from "@/lib/repo/tenant";
 
 export const metadata: Metadata = { title: "Pay rent" };
 
+// Reads the signed-in user's data from Django, so navigating here may wait for it.
+export const instant = false;
+
 export default async function PayPage() {
   const h = await getHome();
   const account = h.tenant.unitName ?? "";

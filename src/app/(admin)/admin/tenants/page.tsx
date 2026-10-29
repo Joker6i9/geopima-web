@@ -1,15 +1,16 @@
 import type { Metadata } from "next";
-import Link from "next/link";
-import { EmptyRow } from "@/components/shared/empty-row";
 import { FilterBar } from "@/components/shared/filter-bar";
+import { adminSections } from "@/components/layout/nav";
+import { SectionTabs } from "@/components/shared/section-tabs";
 import { PageHeader } from "@/components/shared/page-header";
-import { StatusBadge } from "@/components/shared/status-badge";
+import { TenantsTable } from "@/components/shared/tenants-table";
 import { Card, CardContent } from "@/components/ui/card";
-import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table";
-import { kes, phone } from "@/lib/format";
 import { getProperties, getTenants } from "@/lib/repo/admin";
 
 export const metadata: Metadata = { title: "Tenants" };
+
+// Reads the signed-in user's data from Django, so navigating here may wait for it.
+export const instant = false;
 
 export default async function TenantsPage({
   searchParams,
@@ -21,6 +22,7 @@ export default async function TenantsPage({
 
   return (
     <>
+      <SectionTabs tabs={adminSections.people} current="/admin/tenants" label="People" />
       <PageHeader title="Tenants" description={`${tenants.length} tenant${tenants.length === 1 ? "" : "s"}`} />
       <Card>
         <CardContent className="pt-6">
@@ -35,27 +37,7 @@ export default async function TenantsPage({
               ] },
             ]}
           />
-          <Table>
-            <TableHeader>
-              <TableRow>
-                <TableHead>Tenant ID</TableHead><TableHead>Name</TableHead><TableHead>Property / unit</TableHead>
-                <TableHead>Phone</TableHead><TableHead className="text-right">Balance</TableHead><TableHead>Status</TableHead>
-              </TableRow>
-            </TableHeader>
-            <TableBody>
-              {tenants.length === 0 && <EmptyRow cols={6} />}
-              {tenants.map((t) => (
-                <TableRow key={t.id}>
-                  <TableCell className="font-mono text-xs">{t.code}</TableCell>
-                  <TableCell className="font-medium"><Link href={`/admin/tenants/${t.id}`} className="hover:underline">{t.name}</Link></TableCell>
-                  <TableCell>{t.propertyName ? `${t.propertyName} · ${t.unitName}` : "—"}</TableCell>
-                  <TableCell>{phone(t.phone)}</TableCell>
-                  <TableCell className={`text-right tabular-nums ${t.balance > 0 ? "text-[var(--status-bad)] font-medium" : ""}`}>{kes(t.balance)}</TableCell>
-                  <TableCell><StatusBadge status={t.status} /></TableCell>
-                </TableRow>
-              ))}
-            </TableBody>
-          </Table>
+          <TenantsTable rows={tenants} />
         </CardContent>
       </Card>
     </>

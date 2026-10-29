@@ -2,8 +2,7 @@ import { StatusBadge } from "@/components/shared/status-badge";
 import { Card, CardContent } from "@/components/ui/card";
 import { Table, TableBody, TableCell, TableFooter, TableHead, TableHeader, TableRow } from "@/components/ui/table";
 import { fmtDate, fmtDateTime, kes } from "@/lib/format";
-import { agency } from "@/lib/mock/seed";
-import { periodLabel } from "@/lib/mock/queries";
+import { periodLabel } from "@/lib/dates";
 
 interface Detail {
   invoice: {
@@ -11,10 +10,11 @@ interface Detail {
     items: { description: string; amount: number }[]; tenantName: string; tenantCode: string; unitName: string; propertyName: string;
   };
   payments: { id: number; transId: string; time: string; amount: number }[];
+  agency: { name: string; address: string; phone: string; email: string; paybill: string };
 }
 
 export function InvoiceDocument({ detail }: { detail: Detail }) {
-  const { invoice: i, payments } = detail;
+  const { invoice: i, payments, agency } = detail;
   return (
     <Card className="mx-auto max-w-3xl">
       <CardContent className="space-y-8 pt-8">

@@ -12,6 +12,9 @@ import { getMyProperty } from "@/lib/repo/landlord";
 
 export const metadata: Metadata = { title: "Property" };
 
+// Reads the signed-in user's data from Django, so navigating here may wait for it.
+export const instant = false;
+
 export default async function LandlordProperty({ params }: { params: Promise<{ id: string }> }) {
   const { property: p, units } = await getMyProperty(Number((await params).id));
   return (

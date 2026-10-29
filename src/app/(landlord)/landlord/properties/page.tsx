@@ -9,6 +9,9 @@ import { getMyProperties } from "@/lib/repo/landlord";
 
 export const metadata: Metadata = { title: "Properties" };
 
+// Reads the signed-in user's data from Django, so navigating here may wait for it.
+export const instant = false;
+
 export default async function LandlordProperties() {
   const rows = await getMyProperties();
   return (

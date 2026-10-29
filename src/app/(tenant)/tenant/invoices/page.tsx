@@ -5,6 +5,7 @@ import { Card, CardContent } from "@/components/ui/card";
 import { getMyInvoices } from "@/lib/repo/tenant";
 
 export const metadata: Metadata = { title: "Invoices" };
+export const instant = false;
 
 export default async function TenantInvoices() {
   const rows = await getMyInvoices();

@@ -1,27 +1,13 @@
 import "server-only";
 import { notFound } from "next/navigation";
 import { requireRole } from "../session";
-import * as q from "../mock/queries";
+import * as d from "../data/landlord";
 
-async function me() {
-  const s = await requireRole("landlord");
-  if (s.profileId === null) notFound();
-  return s.profileId;
-}
-
-export async function getOverview() {
-  const id = await me();
-  const detail = q.landlordDetail(id);
-  if (!detail) notFound();
-  return { ...detail, statements: q.statements(id), period: q.currentPeriod };
-}
-export async function getMyProperties() { return q.propertyRows(await me()); }
+export async function getOverview() { await requireRole("landlord"); return d.loadOverview(); }
+export async function getMyProperties() { await requireRole("landlord"); return d.loadProperties(); }
 export async function getMyProperty(id: number) {
-  const detail = q.propertyDetail(id, await me());
-  if (!detail) notFound();
-  return detail;
+  await requireRole("landlord");
+  if (!Number.isInteger(id)) notFound();
+  return d.loadProperty(id);
 }
-export async function getMyStatements() {
-  const id = await me();
-  return { landlord: q.landlordDetail(id)!.landlord, rows: q.statements(id) };
-}
+export async function getMyStatements() { await requireRole("landlord"); return d.loadStatements(); }

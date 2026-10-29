@@ -80,7 +80,7 @@ export interface InvoiceItem {
 }
 
 export interface Invoice {
-  id: number;
+  id: string;
   number: string;
   tenantId: number;
   unitId: number;
@@ -105,13 +105,17 @@ export interface MpesaTx {
   time: string;
   status: "settled" | "unmatched";
   tenantId: number | null;
-  invoiceId: number | null;
+  invoiceId: string | null;
+  /** How a reconciled payment was split across invoices (oldest first). */
+  allocations?: { invoiceId: string; amount: number }[];
+  /** Part of the payment that exceeded the tenant's open invoices. */
+  unallocated?: number;
 }
 
 export type DepositStatus = "held" | "refunded";
 
 export interface Deposit {
-  id: number;
+  id: string;
   code: string;
   tenantId: number;
   unitId: number | null;
@@ -120,7 +124,7 @@ export interface Deposit {
 }
 
 export interface VoteHead {
-  id: number;
+  id: string;
   code: string;
   name: string;
   priority: number;

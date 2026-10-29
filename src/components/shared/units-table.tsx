@@ -9,9 +9,17 @@ interface Row {
   status: string; tenantId: number | null; tenantName: string | null;
 }
 
-/** Units list used by the admin Units page and property detail; tenant links only for staff. */
-export function UnitsTable({ rows, showProperty = true, linkTenants = true }: { rows: Row[]; showProperty?: boolean; linkTenants?: boolean }) {
-  const cols = showProperty ? 8 : 7;
+/** Units list used by property detail pages; tenant links only for staff. */
+export function UnitsTable({
+  rows, showProperty = true, linkTenants = true, unitHref,
+}: {
+  rows: Row[];
+  showProperty?: boolean;
+  linkTenants?: boolean;
+  /** When set, the unit name opens its detail panel. */
+  unitHref?: (id: number) => string;
+}) {
+  const cols = showProperty ? 7 : 6;
   return (
     <Table>
       <TableHeader>
@@ -23,14 +31,15 @@ export function UnitsTable({ rows, showProperty = true, linkTenants = true }: { 
           <TableHead className="text-right">Water + garbage</TableHead>
           <TableHead>Tenant</TableHead>
           <TableHead>Status</TableHead>
-          <TableHead className="sr-only">Actions</TableHead>
         </TableRow>
       </TableHeader>
       <TableBody>
         {rows.length === 0 && <EmptyRow cols={cols} />}
         {rows.map((u) => (
           <TableRow key={u.id}>
-            <TableCell className="font-medium">{u.name}</TableCell>
+            <TableCell className="font-medium">
+              {unitHref ? <Link href={unitHref(u.id)} scroll={false} className="hover:underline">{u.name}</Link> : u.name}
+            </TableCell>
             {showProperty && <TableCell>{u.propertyName}</TableCell>}
             <TableCell>{u.type}</TableCell>
             <TableCell className="text-right tabular-nums">{kes(u.rent)}</TableCell>
@@ -41,7 +50,6 @@ export function UnitsTable({ rows, showProperty = true, linkTenants = true }: { 
               ) : "—"}
             </TableCell>
             <TableCell><StatusBadge status={u.status} /></TableCell>
-            <TableCell />
           </TableRow>
         ))}
       </TableBody>

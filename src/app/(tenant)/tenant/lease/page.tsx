@@ -8,6 +8,9 @@ import { getMyLease } from "@/lib/repo/tenant";
 
 export const metadata: Metadata = { title: "My lease" };
 
+// Reads the signed-in user's data from Django, so navigating here may wait for it.
+export const instant = false;
+
 export default async function LeasePage() {
   const { tenant: t, lease, deposit, agency } = await getMyLease();
   return (

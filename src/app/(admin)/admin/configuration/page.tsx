@@ -1,13 +1,17 @@
 import type { Metadata } from "next";
+import { EditAgencyDialog } from "@/components/admin/dialogs";
 import { PageHeader } from "@/components/shared/page-header";
 import { DetailList } from "@/components/shared/detail-list";
 import { StatusBadge } from "@/components/shared/status-badge";
-import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
+import { Card, CardAction, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table";
 import { phone } from "@/lib/format";
 import { getConfiguration } from "@/lib/repo/admin";
 
 export const metadata: Metadata = { title: "Configuration" };
+
+// Reads the signed-in user's data from Django, so navigating here may wait for it.
+export const instant = false;
 
 export default async function ConfigurationPage() {
   const c = await getConfiguration();
@@ -16,7 +20,7 @@ export default async function ConfigurationPage() {
       <PageHeader title="Configuration" description="Agency profile, staff access, banks and message templates." />
       <div className="space-y-4">
         <Card>
-          <CardHeader><CardTitle>Agency profile</CardTitle><CardDescription>{c.agency.slogan}</CardDescription></CardHeader>
+          <CardHeader><CardTitle>Agency profile</CardTitle><CardDescription>{c.agency.slogan}</CardDescription><CardAction><EditAgencyDialog agency={c.agency} /></CardAction></CardHeader>
           <CardContent>
             <DetailList items={[
               { label: "Name", value: c.agency.name },

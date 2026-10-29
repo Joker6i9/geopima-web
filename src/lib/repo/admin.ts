@@ -1,21 +1,26 @@
 import "server-only";
 import { requireRole } from "../session";
-import * as q from "../mock/queries";
+import { adminQueries } from "../data/load";
 
-// Every call is gated on the signed-in role. Replace the bodies with Django API calls once the backend PR lands.
-const guard = () => requireRole("admin");
+// Every call is gated on the signed-in role here; Django still enforces what each staff role may see.
+async function q() {
+  await requireRole("admin");
+  return adminQueries();
+}
 
-export async function getDashboard() { await guard(); return q.adminDashboard(); }
-export async function getLandlords() { await guard(); return q.landlordRows(); }
-export async function getLandlord(id: number) { await guard(); return q.landlordDetail(id); }
-export async function getProperties() { await guard(); return q.propertyRows(); }
-export async function getProperty(id: number) { await guard(); return q.propertyDetail(id); }
-export async function getUnits(f?: Parameters<typeof q.unitRows>[0]) { await guard(); return q.unitRows(f); }
-export async function getTenants(f?: Parameters<typeof q.tenantRows>[0]) { await guard(); return q.tenantRows(f); }
-export async function getTenant(id: number) { await guard(); return q.tenantDetail(id); }
-export async function getInvoices(f?: Parameters<typeof q.invoiceRows>[0]) { await guard(); return q.invoiceRows(f); }
-export async function getInvoice(id: number) { await guard(); return q.invoiceDetail(id); }
-export async function getMpesa(f?: Parameters<typeof q.mpesaRows>[0]) { await guard(); return q.mpesaRows(f); }
-export async function getDeposits() { await guard(); return q.depositRows(); }
-export async function getFinance() { await guard(); return q.financeSummary(); }
-export async function getConfiguration() { await guard(); return q.configuration(); }
+export async function getDashboard() { return (await q()).adminDashboard(); }
+export async function getLandlords() { return (await q()).landlordRows(); }
+export async function getLandlord(id: number) { return (await q()).landlordDetail(id); }
+export async function getProperties() { return (await q()).propertyRows(); }
+export async function getProperty(id: number) { return (await q()).propertyDetail(id); }
+export async function getUnits(f?: { search?: string; property?: string; status?: string }) { return (await q()).unitRows(f); }
+export async function getUnit(id: number) { return (await q()).unitDetail(id); }
+export async function getTenants(f?: { search?: string; status?: string; property?: string }) { return (await q()).tenantRows(f); }
+export async function getTenant(id: number) { return (await q()).tenantDetail(id); }
+export async function getInvoices(f?: { search?: string; status?: string; period?: string; tenantId?: number; propertyId?: number }) { return (await q()).invoiceRows(f); }
+export async function getInvoice(id: string) { return (await q()).invoiceDetail(id); }
+export async function getMpesa(f?: { status?: string; tenantId?: number; invoiceId?: string }) { return (await q()).mpesaRows(f); }
+export async function getDeposits() { return (await q()).depositRows(); }
+export async function getFinance() { return (await q()).financeSummary(); }
+export async function getConfiguration() { return (await q()).configuration(); }
+export async function searchAll(query: string) { return (await q()).searchAll(query); }

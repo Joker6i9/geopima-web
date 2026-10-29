@@ -3,10 +3,13 @@ import { PageHeader } from "@/components/shared/page-header";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Table, TableBody, TableCell, TableFooter, TableHead, TableHeader, TableRow } from "@/components/ui/table";
 import { kes } from "@/lib/format";
-import { periodLabel } from "@/lib/mock/queries";
+import { periodLabel } from "@/lib/dates";
 import { getMyStatements } from "@/lib/repo/landlord";
 
 export const metadata: Metadata = { title: "Statements" };
+
+// Reads the signed-in user's data from Django, so navigating here may wait for it.
+export const instant = false;
 
 export default async function StatementsPage() {
   const { rows } = await getMyStatements();

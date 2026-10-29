@@ -6,10 +6,13 @@ import { PageHeader } from "@/components/shared/page-header";
 import { StatCard } from "@/components/shared/stat-card";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { kes } from "@/lib/format";
-import { periodLabel } from "@/lib/mock/queries";
+import { periodLabel } from "@/lib/dates";
 import { getOverview } from "@/lib/repo/landlord";
 
 export const metadata: Metadata = { title: "Overview" };
+
+// Reads the signed-in user's data from Django, so navigating here may wait for it.
+export const instant = false;
 
 export default async function LandlordHome() {
   const o = await getOverview();

@@ -12,8 +12,10 @@ export function SidebarNav({ portal, onNavigate }: { portal: Role; onNavigate?: 
   const pathname = usePathname();
   return (
     <nav className="flex flex-col gap-1 p-3" aria-label="Main">
-      {navs[portal].map(({ label, href, icon: Icon, exact }) => {
-        const active = exact ? pathname === href : pathname === href || pathname.startsWith(`${href}/`);
+      {navs[portal].map(({ label, href, icon: Icon, exact, also = [] }) => {
+        const active = exact
+          ? pathname === href
+          : [href, ...also].some((h) => pathname === h || pathname.startsWith(`${h}/`));
         return (
           <Link
             key={href}

@@ -8,6 +8,9 @@ import { getMyPayments } from "@/lib/repo/tenant";
 
 export const metadata: Metadata = { title: "Payments" };
 
+// Reads the signed-in user's data from Django, so navigating here may wait for it.
+export const instant = false;
+
 export default async function TenantPayments() {
   const rows = await getMyPayments();
   return (

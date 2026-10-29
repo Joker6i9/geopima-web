@@ -1,5 +1,6 @@
 import type { Metadata } from "next";
 import { notFound } from "next/navigation";
+import { RaiseInvoiceDialog, SuspendDialog, VacateDialog } from "@/components/admin/dialogs";
 import { DetailList } from "@/components/shared/detail-list";
 import { InvoicesTable } from "@/components/shared/invoices-table";
 import { PageHeader } from "@/components/shared/page-header";
@@ -12,6 +13,9 @@ import { getTenant } from "@/lib/repo/admin";
 
 export const metadata: Metadata = { title: "Tenant" };
 
+// Reads the signed-in user's data from Django, so navigating here may wait for it.
+export const instant = false;
+
 export default async function TenantPage({ params }: { params: Promise<{ id: string }> }) {
   const d = await getTenant(Number((await params).id));
   if (!d) notFound();
@@ -19,7 +23,14 @@ export default async function TenantPage({ params }: { params: Promise<{ id: str
 
   return (
     <>
-      <PageHeader title={t.name} description={`Tenant ${t.code}`} actions={<StatusBadge status={t.status} />} />
+      <PageHeader title={t.name} description={`Tenant ${t.code}`} actions={
+        <div className="flex flex-wrap items-center gap-2">
+          {t.status !== "vacated" && <RaiseInvoiceDialog tenant={t} />}
+          {t.status !== "vacated" && <SuspendDialog tenant={t} />}
+          {t.status !== "vacated" && <VacateDialog tenant={t} />}
+          <StatusBadge status={t.status} />
+        </div>
+      } />
       <div className="grid gap-4 sm:grid-cols-3">
         <StatCard label="Balance" value={kes(t.balance)} tone={t.balance > 0 ? "bad" : "good"} />
         <StatCard label="Monthly rent" value={lease ? kes(lease.rent) : "—"} />

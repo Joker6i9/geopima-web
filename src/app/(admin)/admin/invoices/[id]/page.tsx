@@ -8,8 +8,11 @@ import { getInvoice } from "@/lib/repo/admin";
 
 export const metadata: Metadata = { title: "Invoice" };
 
+// Reads the signed-in user's data from Django, so navigating here may wait for it.
+export const instant = false;
+
 export default async function InvoicePage({ params }: { params: Promise<{ id: string }> }) {
-  const detail = await getInvoice(Number((await params).id));
+  const detail = await getInvoice((await params).id);
   if (!detail) notFound();
   return (
     <>
