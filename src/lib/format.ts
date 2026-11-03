@@ -14,3 +14,7 @@ export const fmtDateTime = (iso: string) =>
 export const titleCase = (s: string) => s.replace(/_/g, " ").replace(/^\w/, (c) => c.toUpperCase());
 
 export const phone = (p: string) => (p.startsWith("254") ? `0${p.slice(3, 6)} ${p.slice(6, 9)} ${p.slice(9)}` : p);
+
+export const channelLabel: Record<"mpesa" | "cash" | "bank" | "cheque", string> = {
+  mpesa: "M-Pesa", cash: "Cash", bank: "Bank transfer", cheque: "Cheque",
+};

@@ -4,9 +4,9 @@ import { titleCase } from "@/lib/format";
 type Tone = "good" | "warn" | "bad" | "idle";
 
 const tones: Record<string, Tone> = {
-  paid: "good", active: "good", settled: "good", occupied: "good",
-  partially_paid: "warn", vacant: "warn", maintenance: "warn", under_maintenance: "warn", held: "warn", unpaid: "warn",
-  overdue: "bad", suspended: "bad", unmatched: "bad", inactive: "bad",
+  paid: "good", sent: "good", active: "good", settled: "good", occupied: "good",
+  partially_paid: "warn", vacant: "warn", maintenance: "warn", under_maintenance: "warn", held: "warn", unpaid: "warn", test: "warn",
+  overdue: "bad", failed: "bad", suspended: "bad", unmatched: "bad", inactive: "bad",
   vacated: "idle", refunded: "idle",
 };
 

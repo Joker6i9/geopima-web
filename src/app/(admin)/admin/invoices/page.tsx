@@ -1,3 +1,4 @@
+import { ExportMenu } from "@/components/shared/export-menu";
 import type { Metadata } from "next";
 import { FilterBar } from "@/components/shared/filter-bar";
 import { InvoicesTable } from "@/components/shared/invoices-table";
@@ -26,7 +27,7 @@ export default async function InvoicesPage({
   return (
     <>
       <SectionTabs tabs={adminSections.money} current="/admin/invoices" label="Money" />
-      <PageHeader title="Invoices" description={`${rows.length} invoices · ${kes(outstanding)} outstanding`} />
+      <PageHeader title="Invoices" description={`${rows.length} invoices · ${kes(outstanding)} outstanding`} actions={<ExportMenu dataset="invoices" filters={{ search, status, period }} />} />
       <Card>
         <CardContent className="pt-6">
           <FilterBar

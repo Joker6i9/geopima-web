@@ -50,10 +50,12 @@ export async function moveInAction(_: ActionState, f: FormData) {
     f,
     z.object({
       unitId: id("a unit"), name: text("Name"), phone: text("Phone", 20), email, startDate: date("Start date"),
+      idNumber: z.string().trim().max(30).optional().transform((v) => v ?? ""),
+      secondaryContact: z.string().trim().max(20).optional().transform((v) => v ?? ""),
       endDate: z.string().optional().transform((v) => v || null), dueDay: z.coerce.number().int().min(1, "Rent due day is 1 to 28.").max(28, "Rent due day is 1 to 28."),
     }),
     (i) => ok(post<{ id: number }>("/tenants/tenants/move-in/", {
-      unit: i.unitId, name: i.name, phone_number: i.phone, email: i.email, start_date: i.startDate, end_date: i.endDate, due_date: i.dueDay,
+      unit: i.unitId, name: i.name, phone_number: i.phone, email: i.email, start_date: i.startDate, end_date: i.endDate, due_date: i.dueDay, id_number: i.idNumber, secondary_contact: i.secondaryContact,
     }).then((t) => ({ tenantId: t.id }))),
     (i) => `${i.name} has moved in.`,
   );
@@ -89,6 +91,52 @@ export async function assignPaymentAction(_: ActionState, f: FormData) {
         ? `${kes(applied)} applied to open invoices. ${kes(unallocated)} was more than they owed and is left unallocated.`
         : `${kes(applied)} applied to the tenant's open invoices.`;
     });
+}
+
+export async function recordPaymentAction(_: ActionState, f: FormData) {
+  return run(
+    f,
+    z.object({
+      tenantId: id("a tenant"),
+      amount: z.coerce.number({ error: "Amount must be a number." }).int("Enter whole shillings.").positive("Enter the amount received.").max(10_000_000, "Amount is too large."),
+      channel: z.enum(["cash", "bank", "cheque"], { error: "Choose how it was paid." }),
+      date: date("Date received"),
+      reference: z.string().trim().max(100).optional().transform((v) => v ?? ""),
+      paidTo: z.string().trim().max(100).optional().transform((v) => v ?? ""),
+      note: z.string().trim().max(255).optional().transform((v) => v ?? ""),
+    }),
+    (i) => ok(post<{ trans_amount: string; unallocated: string | number }>("/mpesa/transactions/record/", {
+      tenant: i.tenantId, amount: i.amount, channel: i.channel, date: i.date, reference: i.reference, paid_to: i.paidTo, note: i.note,
+    }).then((t) => ({ applied: Number(t.trans_amount) - Number(t.unallocated), unallocated: Number(t.unallocated) }))),
+    (_i, r) => {
+      const { applied, unallocated } = r as { applied: number; unallocated: number };
+      return unallocated > 0
+        ? `Payment recorded. ${kes(applied)} cleared invoices and ${kes(unallocated)} is kept as credit for the next one.`
+        : `Payment of ${kes(applied)} recorded and applied to the tenant's invoices.`;
+    },
+  );
+}
+
+const idList = z.string().optional().transform((v) => (v ? v.split(",").map(Number).filter(Number.isInteger) : []));
+
+export async function sendMessageAction(_: ActionState, f: FormData) {
+  return run(
+    f,
+    z.object({ message: text("Message", 640), tenants: idList, landlords: idList }),
+    (i) => ok(post<{ sent: number; test: number; failed: number; skipped: number }>("/communication/messages/send/", {
+      message: i.message, tenants: i.tenants, landlords: i.landlords,
+    })),
+    (_i, r) => {
+      const { sent, test, failed, skipped } = r as { sent: number; test: number; failed: number; skipped: number };
+      const parts = [
+        sent && `${sent} sent`,
+        test && `${test} logged in test mode (no SMS provider is set up, nothing was delivered)`,
+        failed && `${failed} failed`,
+        skipped && `${skipped} skipped (no phone number)`,
+      ].filter(Boolean);
+      return parts.join(", ") + ".";
+    },
+  );
 }
 
 export async function refundDepositAction(_: ActionState, f: FormData) {
@@ -157,4 +205,179 @@ export async function updateAgencyAction(_: ActionState, f: FormData) {
     }).then(() => ({}))),
     () => "Agency profile saved.",
   );
+}
+
+/* ---------- settings ---------- */
+
+const bankFields = {
+  name: text("Bank name", 50), branch: text("Branch", 100), accountName: text("Account name", 100), accountNumber: text("Account number", 50),
+  onInvoice: z.string().optional().transform((v) => v === "on"),
+};
+const bankBody = (i: { name: string; branch: string; accountName: string; accountNumber: string; onInvoice: boolean }) => ({
+  short_name: i.name, long_name: i.name, branch: i.branch, acc_name: i.accountName, acc_number: i.accountNumber, on_invoice: i.onInvoice,
+});
+
+export async function addBankAction(_: ActionState, f: FormData) {
+  return run(f, z.object(bankFields),
+    (i) => ok(post("/payment-banks/", bankBody(i)).then(() => ({}))), (i) => `${i.name} added.`);
+}
+
+export async function updateBankAction(_: ActionState, f: FormData) {
+  return run(f, z.object({ bankId: id("a bank"), ...bankFields }),
+    (i) => ok(api(`/payment-banks/${i.bankId}/`, { method: "PATCH", body: JSON.stringify(bankBody(i)) }).then(() => ({}))), (i) => `${i.name} saved.`);
+}
+
+export async function deleteBankAction(_: ActionState, f: FormData) {
+  return run(f, z.object({ bankId: id("a bank") }),
+    (i) => ok(api(`/payment-banks/${i.bankId}/`, { method: "DELETE" }).then(() => ({}))), () => "Bank removed.");
+}
+
+export async function saveSmsTemplateAction(_: ActionState, f: FormData) {
+  return run(f, z.object({ category: key("a template"), text: text("Message", 480), enabled: z.string().optional() }),
+    (i) => ok(post("/sms-templates/bulk-save/", [{
+      category: i.category, template_text: i.text,
+      // Only the receipt template has an on/off switch; its form always sends the checkbox (absent = unticked).
+      ...(i.category === "PAYMENT_NOTIF" ? { enabled: i.enabled === "on" } : {}),
+    }]).then(() => ({}))), () => "Template saved.");
+}
+
+export async function addVoteHeadAction(_: ActionState, f: FormData) {
+  return run(f, z.object({ name: text("Name", 100) }),
+    async (i) => {
+      const heads = await apiAll<{ code: string; priority_order: number }>("/billing/vote-heads/");
+      // The code is what other systems see, so it is made from the name and kept unique.
+      const base = i.name.toUpperCase().replace(/[^A-Z0-9]+/g, "_").replace(/^_|_$/g, "").slice(0, 24) || "CHARGE";
+      const taken = new Set(heads.map((h) => h.code));
+      let code = base;
+      for (let n = 2; taken.has(code); n++) code = `${base}_${n}`;
+      const last = heads.reduce((m, h) => Math.max(m, h.priority_order), 0);
+      return ok(post("/billing/vote-heads/", { name: i.name, code, priority_order: last + 1, status: "active" }).then(() => ({})));
+    },
+    (i) => `${i.name} added at the end of the payment order.`);
+}
+
+export async function updateVoteHeadAction(_: ActionState, f: FormData) {
+  return run(f, z.object({ voteHeadId: key("a charge"), name: text("Name", 100), active: z.string().optional().transform((v) => v === "on") }),
+    (i) => ok(api(`/billing/vote-heads/${i.voteHeadId}/`, { method: "PATCH", body: JSON.stringify({ name: i.name, status: i.active ? "active" : "inactive" }) }).then(() => ({}))),
+    (i) => `${i.name} saved.`);
+}
+
+/** Moves one vote head a place up or down and rewrites the whole order. */
+export async function moveVoteHeadAction(voteHeadId: string, direction: "up" | "down"): Promise<ActionState> {
+  await requireRole("admin");
+  try {
+    const heads = await apiAll<{ id: string; priority_order: number }>("/billing/vote-heads/");
+    const ids = heads.sort((a, b) => a.priority_order - b.priority_order).map((h) => h.id);
+    const at = ids.indexOf(voteHeadId);
+    const to = direction === "up" ? at - 1 : at + 1;
+    if (at < 0 || to < 0 || to >= ids.length) return { ok: true, message: "Already there." };
+    [ids[at], ids[to]] = [ids[to], ids[at]];
+    await post("/billing/vote-heads/reorder/", { priority_order: ids });
+  } catch (e) {
+    if (e instanceof ApiError) return { ok: false, message: e.message };
+    throw e;
+  }
+  revalidatePath("/admin", "layout");
+  return { ok: true, message: "Order updated." };
+}
+
+export async function addStaffAction(_: ActionState, f: FormData) {
+  return run(
+    f,
+    z.object({
+      fullName: text("Full name"), username: text("Username", 30).regex(/^[\w.@+-]+$/, "Username can use letters, numbers and . _ - only."),
+      email, phone: text("Phone", 20), role: key("a role"), password: z.string().min(8, "Password needs at least 8 characters."),
+    }),
+    (i) => ok(post("/users/", { full_name: i.fullName, username: i.username, email: i.email, phone: i.phone, role: i.role, password: i.password }).then(() => ({}))),
+    (i) => `${i.fullName} can now sign in as ${i.username}.`,
+  );
+}
+
+export async function updateStaffAction(_: ActionState, f: FormData) {
+  return run(
+    f,
+    z.object({
+      userId: id("a person"), role: key("a role"), active: z.string().optional().transform((v) => v === "on"),
+      password: z.string().optional().transform((v) => v || undefined).pipe(z.string().min(8, "Password needs at least 8 characters.").optional()),
+    }),
+    (i) => ok(api(`/users/${i.userId}/`, { method: "PATCH", body: JSON.stringify({ role: i.role, is_active: i.active, password: i.password }) }).then(() => ({}))),
+    () => "Saved.",
+  );
+}
+
+/* ---------- edit details ---------- */
+
+const patch = (path: string, body: object) => api(path, { method: "PATCH", body: JSON.stringify(body) }).then(() => ({}));
+
+export async function updateTenantAction(_: ActionState, f: FormData) {
+  return run(
+    f,
+    z.object({
+      tenantId: id("a tenant"), name: text("Name"), phone: text("Phone", 20), email,
+      idNumber: z.string().trim().max(30).optional().transform((v) => v ?? ""),
+      secondaryContact: z.string().trim().max(20).optional().transform((v) => v ?? ""),
+      dueDay: z.coerce.number().int().min(1, "Rent due day is 1 to 28.").max(28, "Rent due day is 1 to 28."),
+    }),
+    (i) => ok(patch(`/tenants/tenants/${i.tenantId}/`, {
+      name: i.name, phone_number: i.phone, email: i.email, id_number: i.idNumber, secondary_contact: i.secondaryContact, due_date: i.dueDay,
+    })),
+    (i) => `${i.name} saved.`,
+  );
+}
+
+export async function updateLandlordAction(_: ActionState, f: FormData) {
+  return run(
+    f,
+    z.object({ landlordId: id("a landlord"), name: text("Name"), phone: text("Phone", 20), email, bank: text("Bank", 40), accountNumber: text("Account number", 30) }),
+    (i) => ok(patch(`/properties/landlords/${i.landlordId}/`, {
+      name: i.name, phone_number: i.phone, email: i.email, bank_name: i.bank, account_number: i.accountNumber,
+    })),
+    (i) => `${i.name} saved.`,
+  );
+}
+
+export async function updatePropertyAction(_: ActionState, f: FormData) {
+  return run(
+    f,
+    z.object({
+      code: key("a property"), landlordId: id("a landlord"), name: text("Name"), location: text("Location"), cluster: text("Cluster", 40),
+      commissionPct: z.coerce.number({ error: "Commission must be a number." }).min(0, "Commission is 0 to 100.").max(100, "Commission is 0 to 100."),
+      deposit: money("Deposit"), water: money("Water"), garbage: money("Garbage"),
+    }),
+    (i) => ok(patch(`/properties/${encodeURIComponent(i.code)}/`, {
+      landlord: i.landlordId, name: i.name, location: i.location, cluster: i.cluster, commission_percentage: i.commissionPct,
+      default_deposit: i.deposit, default_water_rate: i.water, default_garbage_fee: i.garbage,
+    })),
+    (i) => `${i.name} saved.`,
+  );
+}
+
+export async function updateUnitAction(_: ActionState, f: FormData) {
+  return run(
+    f,
+    z.object({ unitId: id("a unit"), type: text("Type", 40), rent: money("Rent"), water: money("Water"), garbage: money("Garbage"), deposit: money("Deposit") }),
+    (i) => ok(patch(`/properties/units/${i.unitId}/`, {
+      unit_type: i.type, rent_amount: i.rent, water_rate: i.water, garbage_fee: i.garbage, deposit: i.deposit,
+    })),
+    () => "Unit saved. New rent and charges apply from the next invoice.",
+  );
+}
+
+/* ---------- real M-Pesa ---------- */
+
+export async function requestPaymentAction(_: ActionState, f: FormData) {
+  return run(
+    f,
+    z.object({
+      tenantId: id("a tenant"),
+      amount: z.coerce.number({ error: "Amount must be a number." }).int("Enter whole shillings.").min(1, "Enter the amount to request.").max(150_000, "The most M-Pesa allows at once is KES 150,000."),
+      phone: z.string().trim().max(20).optional().transform((v) => v ?? ""),
+    }),
+    (i) => ok(post<{ phone: string }>("/mpesa/stk/", { tenant: i.tenantId, amount: i.amount, phone: i.phone }).then((r) => ({ phone: r.phone }))),
+    (i, r) => `Request for ${kes(i.amount)} sent to ${(r as { phone: string }).phone.replace(/^254/, "0")}. It appears under Payments once they enter their PIN.`,
+  );
+}
+
+export async function registerMpesaUrlsAction(_: ActionState, f: FormData) {
+  return run(f, z.object({}), () => ok(post("/mpesa/integration/").then(() => ({}))), () => "Safaricom now sends this paybill's payments to the system.");
 }

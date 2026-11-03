@@ -29,6 +29,7 @@ You can only open your own portal. Visiting another portal's address sends you b
 - **Status badges** are colour-coded: green = good (paid, active, settled, occupied), amber = needs a look (partially paid, unpaid, vacant, maintenance, held), red = problem (overdue, suspended, unmatched, inactive), grey = finished (vacated, refunded).
 - **Search (admin only):** the **Search** box in the header, or press **⌘K / Ctrl+K** (or `/`). Type at least two characters to find tenants (name, ID, phone, unit), units, properties, landlords, invoices (number) and M-Pesa payments (code, account reference, phone). Use ↑ ↓ and Enter, or click, to open a result.
 - **Forms and confirmations:** actions open a small window. If something is wrong (a bad phone number, a duplicate invoice) the message appears in red inside the window and your entries are kept; on success the window closes and a green message confirms it.
+- **Export / download:** tables have **Excel · CSV · PDF** links at the top right. The file matches what you see: if you filtered the list first, the download is filtered the same way. Excel and CSV keep amounts as real numbers (so you can sum them); the PDF is a print-ready page with the agency name, filters used, date and page numbers. Available on: Tenants, Invoices, Payments, Deposits, Landlords, Properties and (in Reports) Arrears and Billed vs collected. Tenants can download their own invoices and payments; landlords can download their statements.
 - **Filters** on list pages use the page address, so a filtered view can be bookmarked or shared. **Clear** resets them.
 
 ---
@@ -49,6 +50,8 @@ The starting point: what needs doing today.
   - *Unmatched payments*: M-Pesa money that could not be tied to a tenant. Opens M-Pesa payments filtered to unmatched.
   - *Overdue invoices*: opens Invoices filtered to overdue.
   - *Vacant units*: the first five, with rent. Each opens that unit's side panel on its property.
+  - *Tenants with no invoice this month*: current tenants with nothing billed for the month, with the first five. Open one and press **Raise invoice**.
+  - *Missing or invalid phone*: current tenants whose number is not a valid Kenyan mobile. They cannot get SMS and their M-Pesa payments may not match.
   - *Leases ending soon*: active leases ending within 60 days, soonest first. Each opens the tenant.
 - **Largest balances this month**: the six biggest overdue current-month invoices, with days late. Click one to open the invoice.
 - **Recent M-Pesa payments**: the six latest payments, who they were matched to, and whether they were settled.
@@ -66,7 +69,7 @@ The home of everything about buildings, units and who lives in them. (The old se
 - Click a property name to open it.
 
 **Property page** (`/admin/properties/<id>`)
-- Header: name, location, cluster, a link to the landlord, and status.
+- Header: name, location, cluster, a link to the landlord, and status. **Edit** changes the name, landlord, location, cluster, commission % and the **standard charges for new units** (deposit, water, garbage). The *Add unit* form is pre-filled from those charges. A property's code never changes.
 - Four cards: units (with occupied and vacant counts), occupancy, monthly rent roll, collected this month.
 - Three tabs:
   - **Units**: every unit with type, rent, water + garbage, tenant and status. Use the chips (**All / Occupied / Vacant / Maintenance**, each with a count) to narrow the list. **Click a unit name to open its side panel.** **Add unit** (top right of the tab) asks for the unit name, type, rent, deposit, water and garbage; new units start vacant, and names must be unique within the property.
@@ -74,18 +77,18 @@ The home of everything about buildings, units and who lives in them. (The old se
   - **Invoices**: all invoices for units in this property. Click an invoice number to open it.
 
 **Unit side panel** (opens over the property page; close with ✕, Esc or by clicking outside)
-- Status and unit type.
+- Status and unit type. **Edit** changes the type, rent, deposit, water and garbage. The new amounts apply from the next invoice; invoices already raised and the current lease keep their amounts.
 - *Monthly charges*: rent, water, garbage and the total.
 - If occupied: *Tenant* (name linking to their page, phone, move-in date, lease dates, balance), *Recent invoices* (latest three, each opens the invoice) and *Recent payments* (latest three).
 - If vacant or under maintenance: a note saying so.
 - **Actions** (buttons at the top of the panel):
-  - **Move in a tenant** (vacant units): asks for name, phone, email, lease start, optional lease end and the rent due day. It creates the tenant, the lease and a held deposit (equal to the unit's deposit), marks the unit occupied and raises the first invoice for the current month. Phone numbers must be Kenyan (e.g. `0712 345 678`) and not already used by a current tenant.
+  - **Move in a tenant** (vacant units): asks for name, phone, email, optional ID number and second contact, lease start, optional lease end and the rent due day. It creates the tenant, the lease and a held deposit (equal to the unit's deposit), marks the unit occupied and raises the first invoice for the current month. Phone numbers must be Kenyan (e.g. `0712 345 678`) and not already used by a current tenant.
   - **Raise invoice** (occupied units): pick a billing period; the invoice uses the unit's current rent, water and garbage. A tenant can only have one invoice per period.
   - **Vacate** (occupied units): after confirmation the lease ends today, the tenant becomes *Vacated* and the unit becomes vacant. Any unpaid balance stays on the tenant's record, and the deposit stays *held* until refunded (see Deposits).
 - The panel's address contains `?unit=<id>`, so you can bookmark it or send the link to a colleague.
 
 ### 2.3 People
-Two tabs: **Tenants** and **Landlords**.
+Three tabs: **Tenants · Landlords · Messages**.
 
 **Tenants** (`/admin/tenants`)
 - Table of tenant ID, name, property and unit, phone, balance (red when owing) and status.
@@ -93,22 +96,34 @@ Two tabs: **Tenants** and **Landlords**.
 - Click a name for the tenant page.
 
 **Tenant page** (`/admin/tenants/<id>`)
-- **Actions** (current tenants only): **Raise invoice**, **Suspend / Reactivate** (flags the tenant without moving them out) and **Vacate**.
+- **Edit** (top right) changes the name, phone, email, ID number, second contact (next of kin) and rent due day. Phone numbers must be valid Kenyan numbers not used by another current tenant.
+- **Request M-Pesa payment** (current tenants who owe): sends a PIN prompt to their phone for the amount you choose (the balance is suggested; the phone can be changed). When they enter the PIN the payment is recorded and applied by itself.
+- **Record payment** (any tenant, including one who has left but still owes). **Actions** (current tenants only): **Raise invoice**, **Suspend / Reactivate** (flags the tenant without moving them out) and **Vacate**.
 - Cards: balance, monthly rent, deposit and its status.
-- *Details*: phone, email, unit, landlord, move-in date, rent due day and lease dates.
+- *Details*: phone, email, ID number, second contact, unit, landlord, move-in date, rent due day and lease dates.
 - *Invoices*: every invoice for this tenant (click to open).
 - *Payments*: M-Pesa payments matched to this tenant.
+
+**Messages** (`/admin/messages`)
+Send a text message to many people at once. Four steps on one screen:
+1. **Who**: *Tenants who owe rent*, *All current tenants*, *Tenants in one property* (choose the property) or *Landlords*. It shows how many people will get it (people with no phone number are skipped) and "See the list" shows their names.
+2. **Write**: start from *Rent reminder*, *General notice* or one of your saved SMS templates, then edit. The **Insert** buttons add details that are filled in for each person: first name, unit, property, balance owed, paybill, agency name. Landlords can only get first name and agency name.
+3. **Preview**: the message exactly as the first recipient would see it, with the character count and how many SMS parts it uses (160 characters per part).
+4. **Send**: press *Send to N people*, then confirm.
+- **Recent messages** below lists the latest 50 with who sent them, to whom, the text and the status (*Sent*, *Failed* with the reason, or *Test only*).
+- **Test mode:** until an SMS provider is connected on the server (`SMS_PROVIDER=africastalking` plus `AT_API_KEY`, `AT_USERNAME`, `AT_SENDER_ID`), a yellow banner shows and messages are only recorded as *Test only*, not delivered.
+- Allowed for Super Admin, Admin, Accountant and Secretary.
 
 **Landlords** (`/admin/landlords`)
 - **Add landlord** (top right): name, phone, email, bank and account number.
 - Table of code, name, phone, bank, number of properties and units, status. Click a name for the landlord page.
 
 **Landlord page** (`/admin/landlords/<id>`)
-- Contact and bank details.
+- Contact and bank details. **Edit** changes the name, phone, email, bank and account number.
 - *Properties*: each property with location, units, occupancy, commission % and amount collected. Click one to open it. **Add property** here pre-selects this landlord.
 
 ### 2.4 Money
-Four tabs: **Invoices · M-Pesa payments · Deposits · Reports**.
+Four tabs: **Invoices · Payments · Deposits · Reports**.
 
 **Invoices** (`/admin/invoices`)
 - Header shows the number of invoices and the total outstanding for the current filter.
@@ -119,10 +134,11 @@ Four tabs: **Invoices · M-Pesa payments · Deposits · Reports**.
 - A printable invoice: billed-to details, period, issue date, the line items (rent, water, garbage…), total, paid, **balance due**, and the payments received against it.
 - **← All invoices** goes back to the list.
 
-**M-Pesa payments** (`/admin/mpesa`)
+**Payments** (`/admin/mpesa`)
+- **Record payment** (top right) is for money that did not come through the paybill: cash, a bank transfer or a cheque. Choose the tenant (those who owe are listed first, with the amount), the amount, the date, how it was paid, the bank it went into, and the reference (bank reference or cheque number; required for bank and cheque, not for cash). It is applied to the tenant's oldest open invoices first, and anything extra is kept as credit for the next invoice. The same button is on the tenant page and on an unpaid invoice, where the tenant and the balance are filled in for you.
 - Header: total received and the amount still needing reconciliation.
 - Buttons: **All**, **Unmatched** (with count), **Settled**. **Unmatched payments are always listed first.**
-- Table: transaction code, time received, sender's phone, the account reference they typed, the tenant it was matched to (a link), amount, status.
+- Table: reference (M-Pesa code, bank reference or generated cash number), time received, how it was paid (sender's phone for M-Pesa; otherwise Cash / Bank transfer / Cheque with the bank and note),  the account reference they typed, the tenant it was matched to (a link), amount, status.
 - *An unmatched payment* usually means the sender typed a wrong or missing unit number as the account reference. Press **Assign** on its row, pick the tenant (only tenants with an open balance are listed, with what they owe) and confirm. The money is applied to that tenant's **oldest open invoices first**, and the payment becomes *Settled*. If the payment is larger than what they owe, the extra is shown under the tenant's name as "unallocated".
 
 **Deposits** (`/admin/deposits`)
@@ -138,14 +154,15 @@ Four tabs: **Invoices · M-Pesa payments · Deposits · Reports**.
 - *Collections by charge*: how much of the current month's rent, water and garbage has been collected.
 
 ### 2.5 Settings (`/admin/configuration`)
-Sections:
+One page of cards. Who may change what follows each person's role.
 - **Agency profile**: name, slogan, phone, email, address and the M-Pesa paybill number. **Edit** changes them (the paybill must be 5 to 7 digits). The tenant portal's payment instructions use the paybill.
-- The sections below are view-only for now *(planned: editing staff, roles, banks, vote heads and SMS templates)*.
-- **Staff**: staff accounts with username, phone, role and active status.
-- **Roles**: each role, how many permissions it has and how many users.
-- **Collection banks**: the agency's bank accounts and which appear on invoices.
-- **Vote heads**: the charge types and the order in which an incoming payment is applied to them (priority 1 is paid first).
-- **SMS templates**: the message wording used for reminders and receipts. Words in braces, like `{name}`, are filled in when sent.
+- **Staff** *(Admin only)*: staff accounts with username, role and active status. **Add staff** asks for full name, username, role, email, phone and a starting password (8+ characters). The pencil on a row changes their role, sets a new password, or untick **Can sign in** to remove their access. Accounts are never deleted, so their history stays. You cannot deactivate or change the role of your own account.
+- **M-Pesa connection** *(Admin only)*: ticks for what is set up (paybill and Daraja credentials, https address, pay-from-phone prompts, last payment received) and, when something is missing, which server setting it is. When ready, **Connect paybill to this system** registers the paybill with Safaricom so payments arrive automatically. Shows the callback addresses with their secret hidden. Setup steps: `docs/MPESA_GO_LIVE.md` in the backend repo. Until real credentials are set it runs against Safaricom's test environment.
+- **Roles**: each role, how many permissions it has and how many users. View only.
+- **Collection banks**: the accounts tenants can pay into. **Add bank**, the pencil edits (bank, branch, account name and number, and whether it **shows on invoices**), the bin removes it. Payments already received are not affected.
+- **Vote heads (charges)**: the charge types in the order an incoming payment pays them off; the first is paid first. **Add charge** puts a new one at the end; the arrows move one up or down; the pencil renames it or marks it *Not in use* (kept for history).
+- **Automatic payment receipts**: every time a payment is recorded for a tenant (M-Pesa paybill, M-Pesa prompt, cash, bank or cheque, or when you assign an unmatched payment), the tenant gets a text such as "Dear Tom, we received KES 1,500 on 2 Nov 2026 (ref QWE123). Your balance is KES 52,495." One text per payment, even if Safaricom repeats it. Change the wording or switch it off in the **Payment received** SMS template below (extra words available there: `{amount}`, `{receipt}`, `{date}`). If the wording is empty or contains a word we don't know, the standard message is used so receipts never stop. These texts show in People > Messages as *Automatic*. A text that fails to send never affects the payment itself.
+- **SMS templates**: ready-made wording for reminders, receipts, discounts and welcomes. **Edit** or **Write** changes one. Words in braces, like `{first_name}`, `{balance}`, `{unit}`, `{paybill}`, are filled in for each person. Saved templates show up as starting points in People > Messages.
 
 ---
 
@@ -156,7 +173,7 @@ Sidebar: **Home · Invoices · Payments · Pay rent · My lease**. Tenants see o
 - **Home** (`/tenant`): a greeting with property, unit and tenant ID. Shows the **amount due** and whether it is overdue with a **How to pay** button, or "You are all paid up". Also the paybill and account number with copy buttons, the three latest invoices and the five latest payments.
 - **Invoices** (`/tenant/invoices`): every monthly invoice and what has been paid against it. Click one (`/tenant/invoices/<id>`) for the full invoice with line items and payments.
 - **Payments** (`/tenant/payments`): history of M-Pesa payments received: code, date, account used and amount.
-- **Pay rent** (`/tenant/pay`): the paybill (business) number and the tenant's account number (their unit number), each with a copy button, plus step-by-step M-Pesa instructions. If a balance is owing, the amount that clears it is shown.
+- **Pay rent** (`/tenant/pay`): **Pay now** at the top. Enter the amount (your balance is suggested) and the M-Pesa phone (yours is filled in; it can be any Safaricom number) and press **Pay with M-Pesa**. A PIN prompt appears on that phone; enter your PIN. The page follows the payment and tells you when it is received, cancelled or timed out (nothing is charged unless you enter the PIN). Below it, **Or pay with Paybill**: the paybill (business) number and the tenant's account number (their unit number), each with a copy button, plus step-by-step M-Pesa instructions. If a balance is owing, the amount that clears it is shown.
 - **My lease** (`/tenant/lease`): start and end dates, monthly rent, rent due day, deposit and its status, landlord, and the managing agency's phone and email.
 
 ---
@@ -176,5 +193,10 @@ Sidebar: **Overview · Properties · Statements**. Landlords see only their own 
 | Date | Change |
 |---|---|
 | 24 Oct 2026 | Admin sidebar cut from 10 items to 5. Units folded into Properties (unit side panel, Units / Tenants / Invoices tabs). People and Money sections with tabs. Dashboard rebuilt around "Needs attention". Finance renamed Reports and absorbed the occupancy and collections-by-charge charts. M-Pesa and Deposits summary cards replaced by a header line; unmatched payments sort first. |
+| 2 Nov 2026 | **Automatic payment-received SMS** to the tenant for every recorded payment, with an on/off switch and editable wording in Settings. Needs Django migrations `communication` 0002 and `config_core` 0003. Fixed: an M-Pesa prompt that Safaricom reported as "still under processing" was wrongly marked failed, and a prompt paid after we had given up waiting is now still recorded. |
+| 2 Nov 2026 | **Real M-Pesa (Daraja):** tenants can pay from their phone with a PIN prompt (Pay rent > Pay now); staff can send a prompt from the tenant page; Settings has an M-Pesa connection card that shows what is missing and registers the paybill with Safaricom. Payments from prompts and from the paybill are recorded once. Needs the Django `mpesa` 0005 migration and the new `MPESA_*` environment variables. |
+| 2 Nov 2026 | **Downloads:** Excel, CSV and PDF on every main table (filters respected), plus tenant and landlord statements. **Editing:** tenants (with new ID number and second contact fields), landlords, properties (with standard charges for new units) and units can now be edited. Dashboard gained *no invoice this month* and *invalid phone* alerts. Needs the Django tenant-field migration (`tenants` 0004) and the property-edit fix (a property's code no longer changes when edited). |
+| 2 Nov 2026 | Settings are now editable: staff (add, change role, reset password, deactivate), collection banks, vote heads (add, rename, reorder, retire) and SMS templates. Needs the Django staff-update changes. |
+| 2 Nov 2026 | **Record payment** (cash, bank, cheque) added to Money > Payments, the tenant page and unpaid invoices; M-Pesa tab renamed Payments, with a "paid by" column. **Messages** tab added under People: bulk SMS to tenants who owe, all tenants, one property or landlords, with personalised fields, preview, confirmation and a sent log. Needs the matching Django changes (`communication` app, `/mpesa/transactions/record/`). |
 | 29 Oct 2026 | Demo data removed. All three portals and every admin action now read and write the Django API. Invoice and deposit ids are Django UUIDs. The "Demo data" badge and demo sign-in buttons are gone. Signing in fails, instead of defaulting to admin, when the backend cannot say which portal an account belongs to. The agency paybill is no longer editable here: it is set on the server (`MPESA_PAYBILL`). |
 | 24 Oct 2026 | Admin actions: move in, vacate, suspend/reactivate, raise invoice, assign unmatched M-Pesa payment, refund deposit, add landlord / property / unit, edit agency profile. Demo data is now changeable in memory. Global search (⌘K) added to the admin header. |

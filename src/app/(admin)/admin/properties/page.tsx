@@ -1,3 +1,4 @@
+import { ExportMenu } from "@/components/shared/export-menu";
 import type { Metadata } from "next";
 import Link from "next/link";
 import { AddPropertyDialog } from "@/components/admin/dialogs";
@@ -30,7 +31,7 @@ export default async function PropertiesPage({
   );
   return (
     <>
-      <PageHeader title="Properties" description={`${rows.length} properties across ${new Set(rows.map((r) => r.landlordId)).size} landlords`} actions={<AddPropertyDialog landlords={landlords} />} />
+      <PageHeader title="Properties" description={`${rows.length} properties across ${new Set(rows.map((r) => r.landlordId)).size} landlords`} actions={<div className="flex flex-wrap items-center gap-2"><ExportMenu dataset="properties" /><AddPropertyDialog landlords={landlords} /></div>} />
       <Card>
         <CardContent className="pt-6">
           <FilterBar

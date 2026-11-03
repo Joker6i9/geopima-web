@@ -1,8 +1,9 @@
-import { Banknote, Building2, DoorClosed, FilePlus2, Pencil, Plus, UserCheck, UserMinus, UserPlus } from "lucide-react";
+import { Banknote, Building2, HandCoins, Smartphone, DoorClosed, FilePlus2, Pencil, Plus, UserCheck, UserMinus, UserPlus } from "lucide-react";
 import { Field, FormDialog, SelectField } from "@/components/shared/form-dialog";
 import {
   addLandlordAction, addPropertyAction, addUnitAction, assignPaymentAction, moveInAction, raiseInvoiceAction,
-  refundDepositAction, setTenantStatusAction, updateAgencyAction, vacateAction,
+  recordPaymentAction, refundDepositAction, requestPaymentAction, setTenantStatusAction, updateAgencyAction, updateLandlordAction, updatePropertyAction,
+  updateTenantAction, updateUnitAction, vacateAction,
 } from "@/lib/actions/admin";
 import { kes } from "@/lib/format";
 import { periodLabel, recentPeriods, today } from "@/lib/dates";
@@ -28,6 +29,8 @@ export function MoveInDialog({ unit }: { unit: { id: number; name: string; rent:
         <Field label="Lease starts" name="startDate" type="date" defaultValue={today()} />
         <Field label="Lease ends" name="endDate" type="date" required={false} hint="Leave empty for an open lease." />
         <Field label="Rent due day" name="dueDay" type="number" defaultValue={5} hint="Day of the month, 1 to 28." />
+        <Field label="ID number" name="idNumber" required={false} />
+        <Field label="Second contact" name="secondaryContact" type="tel" required={false} hint="Next of kin or another number." />
       </div>
     </FormDialog>
   );
@@ -183,7 +186,14 @@ export function AddPropertyDialog({ landlords, landlordId }: { landlords: { id: 
   );
 }
 
-export function AddUnitDialog({ propertyId, propertyName }: { propertyId: number; propertyName: string }) {
+export function AddUnitDialog({
+  propertyId, propertyName, defaults,
+}: {
+  propertyId: number;
+  propertyName: string;
+  /** The property's standard charges, filled in so a new unit is quick to add. */
+  defaults?: { deposit: number; water: number; garbage: number };
+}) {
   return (
     <FormDialog
       trigger={<><Plus /> Add unit</>}
@@ -199,9 +209,9 @@ export function AddUnitDialog({ propertyId, propertyName }: { propertyId: number
         <Field label="Unit name" name="name" placeholder="A12" />
         <Field label="Type" name="type" placeholder="2 Bedroom" />
         <Field label="Monthly rent (KES)" name="rent" type="number" />
-        <Field label="Deposit (KES)" name="deposit" type="number" />
-        <Field label="Water (KES)" name="water" type="number" defaultValue={0} />
-        <Field label="Garbage (KES)" name="garbage" type="number" defaultValue={0} />
+        <Field label="Deposit (KES)" name="deposit" type="number" defaultValue={defaults?.deposit ?? 0} />
+        <Field label="Water (KES)" name="water" type="number" defaultValue={defaults?.water ?? 0} />
+        <Field label="Garbage (KES)" name="garbage" type="number" defaultValue={defaults?.garbage ?? 0} />
       </div>
     </FormDialog>
   );
@@ -228,3 +238,148 @@ export function EditAgencyDialog({ agency }: { agency: { name: string; slogan: s
   );
 }
 
+
+/** Record cash, a bank transfer or a cheque. With `tenant` it is fixed (and the balance suggested); otherwise the user picks one. */
+export function RecordPaymentDialog({
+  tenant, tenants = [], banks, amount, variant = "default",
+}: {
+  tenant?: { id: number; name: string };
+  tenants?: { id: number; name: string; propertyName: string | null; unitName: string | null; balance: number }[];
+  banks: string[];
+  /** Suggested amount, usually what the tenant owes. */
+  amount?: number;
+  variant?: "default" | "outline";
+}) {
+  return (
+    <FormDialog
+      trigger={<><HandCoins /> Record payment</>}
+      triggerVariant={variant}
+      title={tenant ? `Record a payment from ${tenant.name}` : "Record a payment"}
+      description="For cash, bank transfers and cheques. It is applied to the tenant's oldest open invoices first; M-Pesa payments arrive by themselves."
+      action={recordPaymentAction}
+      submitLabel="Record payment"
+      wide
+    >
+      <div className="grid gap-4 sm:grid-cols-2">
+        {tenant ? hidden("tenantId", tenant.id) : (
+          <SelectField
+            label="Tenant"
+            name="tenantId"
+            className="sm:col-span-2"
+            placeholder="Choose a tenant…"
+            options={tenants.map((t) => ({
+              value: t.id,
+              label: `${t.name} · ${t.propertyName ? `${t.propertyName} ${t.unitName}` : "vacated"}${t.balance > 0 ? ` · owes ${kes(t.balance)}` : ""}`,
+            }))}
+          />
+        )}
+        <Field label="Amount received (KES)" name="amount" type="number" defaultValue={amount && amount > 0 ? amount : undefined} />
+        <Field label="Date received" name="date" type="date" defaultValue={today()} />
+        <SelectField
+          label="Paid by"
+          name="channel"
+          defaultValue="cash"
+          options={[{ value: "cash", label: "Cash" }, { value: "bank", label: "Bank transfer" }, { value: "cheque", label: "Cheque" }]}
+        />
+        <SelectField label="Paid into" name="paidTo" required={false} placeholder="Not applicable" options={banks.map((b) => ({ value: b, label: b }))} />
+        <Field label="Reference" name="reference" required={false} className="sm:col-span-2" hint="Bank reference or cheque number. Needed for bank and cheque, not for cash." />
+        <Field label="Note" name="note" required={false} className="sm:col-span-2" />
+      </div>
+    </FormDialog>
+  );
+}
+
+export function EditTenantDialog({ tenant }: { tenant: { id: number; name: string; phone: string; email: string; idNumber: string; secondaryContact: string; dueDay: number } }) {
+  return (
+    <FormDialog trigger={<><Pencil /> Edit</>} title={`Edit ${tenant.name}`} description="Contact details and the day rent is due." action={updateTenantAction} submitLabel="Save" wide>
+      {hidden("tenantId", tenant.id)}
+      <div className="grid gap-4 sm:grid-cols-2">
+        <Field label="Full name" name="name" defaultValue={tenant.name} className="sm:col-span-2" />
+        <Field label="Phone" name="phone" type="tel" defaultValue={tenant.phone} />
+        <Field label="Email" name="email" type="email" defaultValue={tenant.email} />
+        <Field label="ID number" name="idNumber" defaultValue={tenant.idNumber} required={false} />
+        <Field label="Second contact" name="secondaryContact" type="tel" defaultValue={tenant.secondaryContact} required={false} hint="Next of kin or another number." />
+        <Field label="Rent due day" name="dueDay" type="number" defaultValue={tenant.dueDay} hint="Day of the month, 1 to 28." />
+      </div>
+    </FormDialog>
+  );
+}
+
+export function EditLandlordDialog({ landlord }: { landlord: { id: number; name: string; phone: string; email: string; bank: string; accountNumber: string } }) {
+  return (
+    <FormDialog trigger={<><Pencil /> Edit</>} title={`Edit ${landlord.name}`} action={updateLandlordAction} submitLabel="Save" wide>
+      {hidden("landlordId", landlord.id)}
+      <div className="grid gap-4 sm:grid-cols-2">
+        <Field label="Name" name="name" defaultValue={landlord.name} className="sm:col-span-2" />
+        <Field label="Phone" name="phone" type="tel" defaultValue={landlord.phone} />
+        <Field label="Email" name="email" type="email" defaultValue={landlord.email} />
+        <Field label="Bank" name="bank" defaultValue={landlord.bank} />
+        <Field label="Account number" name="accountNumber" defaultValue={landlord.accountNumber} />
+      </div>
+    </FormDialog>
+  );
+}
+
+export function EditPropertyDialog({
+  property, landlords,
+}: {
+  property: { code: string; name: string; landlordId: number; location: string; cluster: string; commissionPct: number; defaults: { deposit: number; water: number; garbage: number } };
+  landlords: { id: number; name: string }[];
+}) {
+  return (
+    <FormDialog trigger={<><Pencil /> Edit</>} title={`Edit ${property.name}`} action={updatePropertyAction} submitLabel="Save" wide>
+      {hidden("code", property.code)}
+      <div className="grid gap-4 sm:grid-cols-2">
+        <Field label="Name" name="name" defaultValue={property.name} className="sm:col-span-2" />
+        <SelectField label="Landlord" name="landlordId" defaultValue={property.landlordId} options={landlords.map((l) => ({ value: l.id, label: l.name }))} className="sm:col-span-2" />
+        <Field label="Location" name="location" defaultValue={property.location} />
+        <Field label="Cluster" name="cluster" defaultValue={property.cluster} />
+        <Field label="Commission %" name="commissionPct" type="number" defaultValue={property.commissionPct} className="sm:col-span-2" />
+        <p className="text-sm font-medium sm:col-span-2">Standard charges for new units</p>
+        <Field label="Deposit (KES)" name="deposit" type="number" defaultValue={property.defaults.deposit} />
+        <Field label="Water (KES)" name="water" type="number" defaultValue={property.defaults.water} />
+        <Field label="Garbage (KES)" name="garbage" type="number" defaultValue={property.defaults.garbage} hint="Used to fill in the Add unit form. Existing units are not changed." />
+      </div>
+    </FormDialog>
+  );
+}
+
+export function EditUnitDialog({ unit }: { unit: { id: number; name: string; type: string; rent: number; water: number; garbage: number; deposit: number } }) {
+  return (
+    <FormDialog
+      trigger={<><Pencil /> Edit</>}
+      title={`Edit unit ${unit.name}`}
+      description="New rent and charges apply from the next invoice. Invoices already raised and the current lease do not change."
+      action={updateUnitAction}
+      submitLabel="Save"
+      wide
+    >
+      {hidden("unitId", unit.id)}
+      <div className="grid gap-4 sm:grid-cols-2">
+        <Field label="Type" name="type" defaultValue={unit.type} className="sm:col-span-2" />
+        <Field label="Monthly rent (KES)" name="rent" type="number" defaultValue={unit.rent} />
+        <Field label="Deposit (KES)" name="deposit" type="number" defaultValue={unit.deposit} />
+        <Field label="Water (KES)" name="water" type="number" defaultValue={unit.water} />
+        <Field label="Garbage (KES)" name="garbage" type="number" defaultValue={unit.garbage} />
+      </div>
+    </FormDialog>
+  );
+}
+
+/** Sends an M-Pesa PIN prompt to the tenant's phone; the money arrives through the normal payment flow. */
+export function RequestPaymentDialog({ tenant, amount }: { tenant: { id: number; name: string; phone: string }; amount?: number }) {
+  return (
+    <FormDialog
+      trigger={<><Smartphone /> Request M-Pesa payment</>}
+      triggerVariant="outline"
+      title={`Ask ${tenant.name} to pay by M-Pesa`}
+      description="A PIN prompt appears on their phone. When they enter it, the payment is recorded and applied to their oldest open invoices automatically."
+      action={requestPaymentAction}
+      submitLabel="Send request"
+    >
+      {hidden("tenantId", tenant.id)}
+      <Field label="Amount (KES)" name="amount" type="number" defaultValue={amount && amount > 0 ? amount : undefined} />
+      <Field label="Phone to prompt" name="phone" type="tel" defaultValue={tenant.phone.replace(/^254/, "0")} hint="Any Safaricom number. Defaults to the tenant's." />
+    </FormDialog>
+  );
+}

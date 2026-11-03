@@ -1,7 +1,7 @@
 import type { Metadata } from "next";
 import Link from "next/link";
 import { notFound } from "next/navigation";
-import { AddPropertyDialog } from "@/components/admin/dialogs";
+import { AddPropertyDialog, EditLandlordDialog } from "@/components/admin/dialogs";
 import { PageHeader } from "@/components/shared/page-header";
 import { DetailList } from "@/components/shared/detail-list";
 import { StatusBadge } from "@/components/shared/status-badge";
@@ -22,7 +22,7 @@ export default async function LandlordPage({ params }: { params: Promise<{ id: s
 
   return (
     <>
-      <PageHeader title={l.name} description={`Landlord ${l.code}`} actions={<StatusBadge status={l.isActive ? "active" : "inactive"} />} />
+      <PageHeader title={l.name} description={`Landlord ${l.code}`} actions={<div className="flex items-center gap-2"><EditLandlordDialog landlord={l} /><StatusBadge status={l.isActive ? "active" : "inactive"} /></div>} />
       <Card>
         <CardContent className="pt-6">
           <DetailList items={[

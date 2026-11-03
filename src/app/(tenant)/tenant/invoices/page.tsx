@@ -1,3 +1,4 @@
+import { ExportMenu } from "@/components/shared/export-menu";
 import type { Metadata } from "next";
 import { InvoicesTable } from "@/components/shared/invoices-table";
 import { PageHeader } from "@/components/shared/page-header";
@@ -11,7 +12,7 @@ export default async function TenantInvoices() {
   const rows = await getMyInvoices();
   return (
     <>
-      <PageHeader title="My invoices" description="Every monthly invoice and what has been paid against it." />
+      <PageHeader title="My invoices" description="Every monthly invoice and what has been paid against it." actions={<ExportMenu dataset="invoices" />} />
       <Card><CardContent className="pt-6"><InvoicesTable rows={rows} basePath="/tenant/invoices" showTenant={false} /></CardContent></Card>
     </>
   );

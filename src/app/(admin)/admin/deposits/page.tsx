@@ -1,3 +1,4 @@
+import { ExportMenu } from "@/components/shared/export-menu";
 import type { Metadata } from "next";
 import { adminSections } from "@/components/layout/nav";
 import { SectionTabs } from "@/components/shared/section-tabs";
@@ -23,6 +24,7 @@ export default async function DepositsPage() {
       <PageHeader
         title="Deposits"
         description={`${kes(held.reduce((s, d) => s + d.amount, 0))} held across ${held.length} deposits · ${kes(rows.filter((d) => d.status === "refunded").reduce((s, d) => s + d.amount, 0))} refunded`}
+        actions={<ExportMenu dataset="deposits" />}
       />
       <Card>
         <CardContent className="pt-6">

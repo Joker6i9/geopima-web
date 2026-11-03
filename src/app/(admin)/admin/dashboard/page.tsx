@@ -1,6 +1,6 @@
 import type { Metadata } from "next";
 import Link from "next/link";
-import { AlertTriangle, CalendarClock, DoorOpen, Percent, Smartphone, Wallet } from "lucide-react";
+import { AlertTriangle, CalendarClock, DoorOpen, FileX, Percent, PhoneOff, Smartphone, Wallet } from "lucide-react";
 import { PageHeader } from "@/components/shared/page-header";
 import { StatCard } from "@/components/shared/stat-card";
 import { StatusBadge } from "@/components/shared/status-badge";
@@ -99,6 +99,36 @@ export default async function DashboardPage() {
           </Attention>
           <Attention
             href="/admin/tenants"
+            icon={FileX}
+            tone={d.noInvoice.count ? "bad" : undefined}
+            title={d.noInvoice.count ? `${plural(d.noInvoice.count, "tenant")} with no invoice this month` : "Everyone has been invoiced this month"}
+            hint="Open the tenant and press Raise invoice"
+          >
+            {d.noInvoice.sample.map((t) => (
+              <li key={t.id}>
+                <Link href={`/admin/tenants/${t.id}`} className="flex justify-between gap-3 py-2 hover:bg-muted/50">
+                  <span>{t.name}</span><span className="text-muted-foreground">{t.propertyName} {t.unitName}</span>
+                </Link>
+              </li>
+            ))}
+          </Attention>
+          <Attention
+            href="/admin/tenants"
+            icon={PhoneOff}
+            tone={d.badPhone.count ? "bad" : undefined}
+            title={d.badPhone.count ? `${plural(d.badPhone.count, "tenant")} with a missing or invalid phone` : "Every tenant has a valid phone"}
+            hint="They cannot get SMS, and their M-Pesa payments may not match"
+          >
+            {d.badPhone.sample.map((t) => (
+              <li key={t.id}>
+                <Link href={`/admin/tenants/${t.id}`} className="flex justify-between gap-3 py-2 hover:bg-muted/50">
+                  <span>{t.name}</span><span className="text-muted-foreground">{t.phone || "no number"}</span>
+                </Link>
+              </li>
+            ))}
+          </Attention>
+          <Attention
+            href="/admin/tenants"
             icon={CalendarClock}
             title={d.leasesEnding.length ? `${plural(d.leasesEnding.length, "lease")} ending soon` : "No leases ending soon"}
             hint={`Ending within ${d.leaseWarningDays} days`}
@@ -136,7 +166,7 @@ export default async function DashboardPage() {
         </Card>
 
         <Card>
-          <CardHeader><CardTitle>Recent M-Pesa payments</CardTitle></CardHeader>
+          <CardHeader><CardTitle>Recent payments</CardTitle></CardHeader>
           <CardContent className="divide-y">
             {d.recentPayments.map((m) => (
               <div key={m.id} className="flex items-center justify-between gap-3 py-2.5">

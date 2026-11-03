@@ -1,3 +1,4 @@
+import { ExportMenu } from "@/components/shared/export-menu";
 import type { Metadata } from "next";
 import { PageHeader } from "@/components/shared/page-header";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
@@ -18,7 +19,7 @@ export default async function StatementsPage() {
 
   return (
     <>
-      <PageHeader title="Statements" description="Monthly rent collected, commission and the amount payable to you." />
+      <PageHeader title="Statements" description="Monthly rent collected, commission and the amount payable to you." actions={<ExportMenu dataset="statements" />} />
       <div className="space-y-4">
         {periods.map((period) => {
           const list = rows.filter((r) => r.period === period);

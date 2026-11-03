@@ -1,3 +1,4 @@
+import { ExportMenu } from "@/components/shared/export-menu";
 import type { Metadata } from "next";
 import Link from "next/link";
 import { adminSections } from "@/components/layout/nav";
@@ -20,7 +21,7 @@ export default async function LandlordsPage() {
   return (
     <>
       <SectionTabs tabs={adminSections.people} current="/admin/landlords" label="People" />
-      <PageHeader title="Landlords" description={`${rows.length} landlords`} actions={<AddLandlordDialog />} />
+      <PageHeader title="Landlords" description={`${rows.length} landlords`} actions={<div className="flex flex-wrap items-center gap-2"><ExportMenu dataset="landlords" /><AddLandlordDialog /></div>} />
       <Card>
         <CardContent className="pt-6">
           <Table>

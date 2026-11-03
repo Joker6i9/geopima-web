@@ -21,10 +21,11 @@ export const adminSections = {
   people: [
     { label: "Tenants", href: "/admin/tenants" },
     { label: "Landlords", href: "/admin/landlords" },
+    { label: "Messages", href: "/admin/messages" },
   ],
   money: [
     { label: "Invoices", href: "/admin/invoices" },
-    { label: "M-Pesa payments", href: "/admin/mpesa" },
+    { label: "Payments", href: "/admin/mpesa" },
     { label: "Deposits", href: "/admin/deposits" },
     { label: "Reports", href: "/admin/finance" },
   ],
@@ -40,7 +41,7 @@ export const navs: Record<Role, NavItem[]> = {
   admin: [
     { label: "Dashboard", href: "/admin/dashboard", icon: LayoutDashboard },
     { label: "Properties", href: "/admin/properties", icon: Building2 },
-    { label: "People", href: "/admin/tenants", icon: Users, also: ["/admin/landlords"] },
+    { label: "People", href: "/admin/tenants", icon: Users, also: ["/admin/landlords", "/admin/messages"] },
     { label: "Money", href: "/admin/invoices", icon: Wallet, also: ["/admin/mpesa", "/admin/deposits", "/admin/finance"] },
     { label: "Settings", href: "/admin/configuration", icon: Settings },
   ],

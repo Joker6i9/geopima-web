@@ -3,7 +3,8 @@ import { CopyButton } from "@/components/shared/copy-button";
 import { PageHeader } from "@/components/shared/page-header";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { kes } from "@/lib/format";
-import { getHome } from "@/lib/repo/tenant";
+import { PayNow } from "@/components/tenant/pay-now";
+import { getHome, getMyLease } from "@/lib/repo/tenant";
 
 export const metadata: Metadata = { title: "Pay rent" };
 
@@ -11,7 +12,7 @@ export const metadata: Metadata = { title: "Pay rent" };
 export const instant = false;
 
 export default async function PayPage() {
-  const h = await getHome();
+  const [h, lease] = await Promise.all([getHome(), getMyLease()]);
   const account = h.tenant.unitName ?? "";
   const steps = [
     "Open M-Pesa on your phone and choose Lipa na M-Pesa, then Paybill.",
@@ -23,10 +24,14 @@ export default async function PayPage() {
 
   return (
     <>
-      <PageHeader title="Pay rent" description="Pay from any phone with M-Pesa Paybill." />
+      <PageHeader title="Pay rent" description="Pay straight from your phone, or with M-Pesa Paybill." />
+      <Card className="mb-4">
+        <CardHeader><CardTitle>Pay now</CardTitle></CardHeader>
+        <CardContent className="mx-auto max-w-md"><PayNow phone={lease.tenant.phone.replace(/^254/, "0")} balance={h.balance} /></CardContent>
+      </Card>
       <div className="grid gap-4 lg:grid-cols-2">
         <Card>
-          <CardHeader><CardTitle>Your payment details</CardTitle></CardHeader>
+          <CardHeader><CardTitle>Or pay with Paybill</CardTitle></CardHeader>
           <CardContent className="space-y-4">
             <div className="flex items-center justify-between gap-3 rounded-md border p-4">
               <div><div className="text-xs uppercase tracking-wide text-muted-foreground">Business number</div><div className="text-3xl font-semibold tabular-nums">{h.paybill}</div></div>

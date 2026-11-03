@@ -238,8 +238,15 @@ export function makeQueries(data: Data) {
         const t = tenantRow(T.get(l.tenantId)!);
         return { leaseId: l.id, tenantId: t.id, tenantName: t.name, unitName: t.unitName, propertyName: t.propertyName, endDate: l.endDate!, daysLeft: daysBetween(now, l.endDate!) };
       });
+    const currentTenants = tenants.filter((t) => t.status !== "vacated" && t.unitId).map(tenantRow);
+    const billedIds = new Set(current.map((i) => i.tenantId));
+    const noInvoice = currentTenants.filter((t) => !billedIds.has(t.id));
+    // Kenyan mobile numbers are stored as 254 + 9 digits; anything else cannot receive an SMS or an M-Pesa match.
+    const badPhone = currentTenants.filter((t) => !/^254\d{9}$/.test(t.phone));
     return {
       period: currentPeriod,
+      noInvoice: { count: noInvoice.length, sample: noInvoice.slice(0, 5) },
+      badPhone: { count: badPhone.length, sample: badPhone.slice(0, 5) },
       totalUnits: sum(props.map((p) => p.unitCount)),
       occupiedUnits: sum(props.map((p) => p.occupiedCount)),
       billed: sum(current.map((i) => i.total)),

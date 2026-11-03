@@ -1,3 +1,4 @@
+import { ExportMenu } from "@/components/shared/export-menu";
 import type { Metadata } from "next";
 import { EmptyRow } from "@/components/shared/empty-row";
 import { PageHeader } from "@/components/shared/page-header";
@@ -15,7 +16,7 @@ export default async function TenantPayments() {
   const rows = await getMyPayments();
   return (
     <>
-      <PageHeader title="Payment history" description={`${rows.length} payments received`} />
+      <PageHeader title="Payment history" description={`${rows.length} payments received`} actions={<ExportMenu dataset="payments" />} />
       <Card>
         <CardContent className="pt-6">
           <Table>

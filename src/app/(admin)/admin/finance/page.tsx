@@ -1,3 +1,4 @@
+import { ExportMenu } from "@/components/shared/export-menu";
 import type { Metadata } from "next";
 import { adminSections } from "@/components/layout/nav";
 import { SectionTabs } from "@/components/shared/section-tabs";
@@ -20,7 +21,7 @@ export default async function FinancePage() {
   return (
     <>
       <SectionTabs tabs={adminSections.money} current="/admin/finance" label="Money" />
-      <PageHeader title="Reports" description="Billing, collections, arrears and occupancy, August to October 2026." />
+      <PageHeader title="Reports" description="Billing, collections, arrears and occupancy, August to October 2026." actions={<div className="flex flex-wrap items-center gap-4"><span className="flex items-center gap-2 text-sm text-muted-foreground">Arrears <ExportMenu dataset="arrears" /></span><span className="flex items-center gap-2 text-sm text-muted-foreground">Billed vs collected <ExportMenu dataset="finance" /></span></div>} />
       <div className="grid gap-4 sm:grid-cols-2 xl:grid-cols-4">
         <StatCard label="Billed" value={kes(f.totalBilled)} />
         <StatCard label="Collected" value={kes(f.totalCollected)} hint={`${Math.round((f.totalCollected / f.totalBilled) * 100)}% of billed`} tone="good" />

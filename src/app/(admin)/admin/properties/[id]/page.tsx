@@ -1,7 +1,7 @@
 import type { Metadata } from "next";
 import Link from "next/link";
 import { notFound } from "next/navigation";
-import { AddUnitDialog } from "@/components/admin/dialogs";
+import { AddUnitDialog, EditPropertyDialog } from "@/components/admin/dialogs";
 import { InvoicesTable } from "@/components/shared/invoices-table";
 import { PageHeader } from "@/components/shared/page-header";
 import { SectionTabs } from "@/components/shared/section-tabs";
@@ -14,7 +14,7 @@ import { UnitsTable } from "@/components/shared/units-table";
 import { buttonVariants } from "@/components/ui/button";
 import { Card, CardContent } from "@/components/ui/card";
 import { kes } from "@/lib/format";
-import { getInvoices, getProperty, getTenants, getUnit } from "@/lib/repo/admin";
+import { getInvoices, getLandlords, getProperty, getTenants, getUnit } from "@/lib/repo/admin";
 import { cn } from "@/lib/utils";
 
 export const metadata: Metadata = { title: "Property" };
@@ -37,7 +37,7 @@ export default async function PropertyPage({
   const tab: Tab = TABS.find((t) => t === sp.tab) ?? "units";
   const status = STATUSES.includes(sp.status ?? "") ? sp.status! : "";
 
-  const data = await getProperty(id);
+  const [data, landlords] = await Promise.all([getProperty(id), getLandlords()]);
   if (!data) notFound();
   const { property: p, units } = data;
 
@@ -70,7 +70,8 @@ export default async function PropertyPage({
         title={p.name}
         description={`${p.location} · ${p.cluster}`}
         actions={
-          <div className="flex items-center gap-3 text-sm">
+          <div className="flex flex-wrap items-center gap-3 text-sm">
+            <EditPropertyDialog property={p} landlords={landlords.map((l) => ({ id: l.id, name: l.name }))} />
             <Link href={`/admin/landlords/${p.landlordId}`} className="text-muted-foreground hover:underline">{p.landlordName}</Link>
             <StatusBadge status={p.status} />
           </div>
@@ -108,7 +109,7 @@ export default async function PropertyPage({
                       {c.label}
                     </Link>
                   ))}
-                  <div className="ml-auto"><AddUnitDialog propertyId={id} propertyName={p.name} /></div>
+                  <div className="ml-auto"><AddUnitDialog propertyId={id} propertyName={p.name} defaults={p.defaults} /></div>
                 </div>
                 <UnitsTable rows={shown} showProperty={false} unitHref={(uid) => href({ status, unit: String(uid) })} />
               </>

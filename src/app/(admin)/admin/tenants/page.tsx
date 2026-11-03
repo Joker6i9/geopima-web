@@ -1,3 +1,4 @@
+import { ExportMenu } from "@/components/shared/export-menu";
 import type { Metadata } from "next";
 import { FilterBar } from "@/components/shared/filter-bar";
 import { adminSections } from "@/components/layout/nav";
@@ -23,7 +24,7 @@ export default async function TenantsPage({
   return (
     <>
       <SectionTabs tabs={adminSections.people} current="/admin/tenants" label="People" />
-      <PageHeader title="Tenants" description={`${tenants.length} tenant${tenants.length === 1 ? "" : "s"}`} />
+      <PageHeader title="Tenants" description={`${tenants.length} tenant${tenants.length === 1 ? "" : "s"}`} actions={<ExportMenu dataset="tenants" filters={{ search, status, property }} />} />
       <Card>
         <CardContent className="pt-6">
           <FilterBar

@@ -1,5 +1,5 @@
 import Link from "next/link";
-import { MoveInDialog, RaiseInvoiceDialog, VacateDialog } from "@/components/admin/dialogs";
+import { EditUnitDialog, MoveInDialog, RaiseInvoiceDialog, VacateDialog } from "@/components/admin/dialogs";
 import { StatusBadge } from "@/components/shared/status-badge";
 import { fmtDate, kes, phone } from "@/lib/format";
 import { periodLabel } from "@/lib/dates";
@@ -29,6 +29,7 @@ export function UnitPanel({ data }: { data: UnitData }) {
       <div className="flex flex-wrap items-center gap-2">
         <StatusBadge status={unit.status} />
         <span className="mr-auto text-sm text-muted-foreground">{unit.type}</span>
+        <EditUnitDialog unit={unit} />
         {unit.status === "vacant" && <MoveInDialog unit={unit} />}
         {tenant && <RaiseInvoiceDialog tenant={tenant} />}
         {tenant && <VacateDialog tenant={tenant} />}

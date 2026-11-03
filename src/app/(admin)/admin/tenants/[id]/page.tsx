@@ -1,6 +1,6 @@
 import type { Metadata } from "next";
 import { notFound } from "next/navigation";
-import { RaiseInvoiceDialog, SuspendDialog, VacateDialog } from "@/components/admin/dialogs";
+import { EditTenantDialog, RequestPaymentDialog, RaiseInvoiceDialog, RecordPaymentDialog, SuspendDialog, VacateDialog } from "@/components/admin/dialogs";
 import { DetailList } from "@/components/shared/detail-list";
 import { InvoicesTable } from "@/components/shared/invoices-table";
 import { PageHeader } from "@/components/shared/page-header";
@@ -8,8 +8,8 @@ import { StatCard } from "@/components/shared/stat-card";
 import { StatusBadge } from "@/components/shared/status-badge";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table";
-import { fmtDate, fmtDateTime, kes, phone } from "@/lib/format";
-import { getTenant } from "@/lib/repo/admin";
+import { channelLabel, fmtDate, fmtDateTime, kes, phone } from "@/lib/format";
+import { getConfiguration, getTenant } from "@/lib/repo/admin";
 
 export const metadata: Metadata = { title: "Tenant" };
 
@@ -17,7 +17,7 @@ export const metadata: Metadata = { title: "Tenant" };
 export const instant = false;
 
 export default async function TenantPage({ params }: { params: Promise<{ id: string }> }) {
-  const d = await getTenant(Number((await params).id));
+  const [d, config] = await Promise.all([getTenant(Number((await params).id)), getConfiguration()]);
   if (!d) notFound();
   const { tenant: t, lease, invoices, payments, deposit } = d;
 
@@ -25,6 +25,9 @@ export default async function TenantPage({ params }: { params: Promise<{ id: str
     <>
       <PageHeader title={t.name} description={`Tenant ${t.code}`} actions={
         <div className="flex flex-wrap items-center gap-2">
+          <EditTenantDialog tenant={t} />
+          {t.status !== "vacated" && t.balance > 0 && <RequestPaymentDialog tenant={t} amount={t.balance} />}
+          <RecordPaymentDialog tenant={t} amount={t.balance} banks={config.banks.map((b) => b.shortName)} />
           {t.status !== "vacated" && <RaiseInvoiceDialog tenant={t} />}
           {t.status !== "vacated" && <SuspendDialog tenant={t} />}
           {t.status !== "vacated" && <VacateDialog tenant={t} />}
@@ -43,6 +46,8 @@ export default async function TenantPage({ params }: { params: Promise<{ id: str
           <DetailList items={[
             { label: "Phone", value: phone(t.phone) },
             { label: "Email", value: t.email },
+            { label: "ID number", value: t.idNumber || "—" },
+            { label: "Second contact", value: t.secondaryContact ? phone(t.secondaryContact) : "—" },
             { label: "Unit", value: t.propertyName ? `${t.propertyName} · ${t.unitName}` : "Vacated" },
             { label: "Landlord", value: t.landlordName },
             { label: "Moved in", value: fmtDate(t.entryDate) },
@@ -61,13 +66,14 @@ export default async function TenantPage({ params }: { params: Promise<{ id: str
         <CardHeader><CardTitle>Payments</CardTitle></CardHeader>
         <CardContent>
           <Table>
-            <TableHeader><TableRow><TableHead>Transaction</TableHead><TableHead>Received</TableHead><TableHead className="text-right">Amount</TableHead></TableRow></TableHeader>
+            <TableHeader><TableRow><TableHead>Transaction</TableHead><TableHead>Received</TableHead><TableHead>Paid by</TableHead><TableHead className="text-right">Amount</TableHead></TableRow></TableHeader>
             <TableBody>
-              {payments.length === 0 && <TableRow><TableCell colSpan={3} className="py-8 text-center text-muted-foreground">No payments yet.</TableCell></TableRow>}
+              {payments.length === 0 && <TableRow><TableCell colSpan={4} className="py-8 text-center text-muted-foreground">No payments yet.</TableCell></TableRow>}
               {payments.map((p) => (
                 <TableRow key={p.id}>
                   <TableCell className="font-mono text-xs">{p.transId}</TableCell>
                   <TableCell>{fmtDateTime(p.time)}</TableCell>
+                  <TableCell>{channelLabel[p.channel]}</TableCell>
                   <TableCell className="text-right tabular-nums">{kes(p.amount)}</TableCell>
                 </TableRow>
               ))}

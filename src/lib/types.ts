@@ -30,6 +30,8 @@ export interface Property {
   location: string;
   cluster: string;
   commissionPct: number;
+  /** Charges a new unit in this property starts with. */
+  defaults: { deposit: number; water: number; garbage: number };
   status: PropertyStatus;
 }
 
@@ -55,6 +57,9 @@ export interface Tenant {
   name: string;
   phone: string;
   email: string;
+  idNumber: string;
+  /** Next of kin or a second number. */
+  secondaryContact: string;
   unitId: number | null;
   dueDay: number;
   entryDate: string;
@@ -95,6 +100,8 @@ export interface Invoice {
   status: InvoiceStatus;
 }
 
+export type PaymentChannel = "mpesa" | "cash" | "bank" | "cheque";
+
 export interface MpesaTx {
   id: number;
   transId: string;
@@ -104,6 +111,11 @@ export interface MpesaTx {
   /** ISO date-time */
   time: string;
   status: "settled" | "unmatched";
+  /** How it was paid; staff record the non-M-Pesa ones by hand. */
+  channel: PaymentChannel;
+  /** Bank the money went into (manual payments). */
+  paidTo: string;
+  note: string;
   tenantId: number | null;
   invoiceId: string | null;
   /** How a reconciled payment was split across invoices (oldest first). */
@@ -158,4 +170,6 @@ export interface Bank {
 export interface SmsTemplate {
   category: string;
   text: string;
+  /** Receipt template only: send it automatically when a payment is recorded. */
+  enabled: boolean;
 }
