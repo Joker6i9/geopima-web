@@ -381,3 +381,21 @@ export async function requestPaymentAction(_: ActionState, f: FormData) {
 export async function registerMpesaUrlsAction(_: ActionState, f: FormData) {
   return run(f, z.object({}), () => ok(post("/mpesa/integration/").then(() => ({}))), () => "Safaricom now sends this paybill's payments to the system.");
 }
+
+/* ---------- portal logins ---------- */
+
+export type LoginResult = { ok: true; username: string; password: string; created: boolean } | { ok: false; message: string };
+
+/** Creates the tenant's or landlord's portal login (or resets its password) and returns the password once. */
+export async function issueLoginAction(kind: "tenant" | "landlord", recordId: number): Promise<LoginResult> {
+  await requireRole("admin");
+  if (!Number.isInteger(recordId) || recordId <= 0) return { ok: false, message: "Choose a record." };
+  const path = kind === "tenant" ? `/tenants/tenants/${recordId}/login/` : `/properties/landlords/${recordId}/login/`;
+  try {
+    const r = await post<{ username: string; password: string; created: boolean }>(path);
+    return { ok: true, ...r };
+  } catch (e) {
+    if (e instanceof ApiError) return { ok: false, message: e.message };
+    throw e;
+  }
+}

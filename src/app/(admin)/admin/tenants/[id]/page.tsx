@@ -1,5 +1,6 @@
 import type { Metadata } from "next";
 import { notFound } from "next/navigation";
+import { LoginDialog } from "@/components/admin/login-dialog";
 import { EditTenantDialog, RequestPaymentDialog, RaiseInvoiceDialog, RecordPaymentDialog, SuspendDialog, VacateDialog } from "@/components/admin/dialogs";
 import { DetailList } from "@/components/shared/detail-list";
 import { InvoicesTable } from "@/components/shared/invoices-table";
@@ -26,6 +27,7 @@ export default async function TenantPage({ params }: { params: Promise<{ id: str
       <PageHeader title={t.name} description={`Tenant ${t.code}`} actions={
         <div className="flex flex-wrap items-center gap-2">
           <EditTenantDialog tenant={t} />
+          {t.status !== "vacated" && <LoginDialog kind="tenant" id={t.id} name={t.name} hasLogin={t.hasLogin} />}
           {t.status !== "vacated" && t.balance > 0 && <RequestPaymentDialog tenant={t} amount={t.balance} />}
           <RecordPaymentDialog tenant={t} amount={t.balance} banks={config.banks.map((b) => b.shortName)} />
           {t.status !== "vacated" && <RaiseInvoiceDialog tenant={t} />}

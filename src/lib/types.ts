@@ -18,6 +18,8 @@ export interface Landlord {
   bank: string;
   accountNumber: string;
   isActive: boolean;
+  /** Already has a portal login. */
+  hasLogin: boolean;
 }
 
 export type PropertyStatus = "active" | "inactive" | "under_maintenance";
@@ -60,6 +62,8 @@ export interface Tenant {
   idNumber: string;
   /** Next of kin or a second number. */
   secondaryContact: string;
+  /** Already has a portal login. */
+  hasLogin: boolean;
   unitId: number | null;
   dueDay: number;
   entryDate: string;

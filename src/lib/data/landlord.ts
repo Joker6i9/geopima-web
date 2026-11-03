@@ -14,7 +14,7 @@ interface ApiWho { id: number; code: string; name: string }
 interface ApiStatement { period: string; property_id: number; property: string; billed: string; collected: string; arrears: string; commission: string; net: string }
 
 const landlordOf = (w: ApiWho, id = w.id): Landlord =>
-  ({ id, code: w.code, name: w.name, phone: "", email: "", bank: "", accountNumber: "", isActive: true });
+  ({ id, code: w.code, name: w.name, phone: "", email: "", bank: "", accountNumber: "", isActive: true, hasLogin: true });
 
 const propertyRow = (r: ApiRow, landlordName: string) => ({
   id: r.id, code: r.code, name: r.name, landlordId: 0, location: r.location, cluster: r.cluster,

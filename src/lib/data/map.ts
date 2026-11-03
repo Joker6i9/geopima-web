@@ -4,10 +4,10 @@ import type {
 } from "../types";
 
 /* Shapes of the Django responses we read. Only the fields the web app uses are listed. */
-export interface ApiLandlord { id: number; landlord_id: string; name: string; phone_number: string; email: string | null; bank_name: string | null; account_number: string | null; is_active: boolean }
+export interface ApiLandlord { id: number; landlord_id: string; name: string; phone_number: string; email: string | null; bank_name: string | null; account_number: string | null; is_active: boolean; has_login?: boolean }
 export interface ApiProperty { id: number; property_id: string; name: string; landlord: number | null; location: string; cluster: string; commission_percentage: string | number; default_deposit?: number; default_water_rate?: number; default_garbage_fee?: number; status: string }
 export interface ApiUnit { id: number; property_pk: number | null; unit_name: string; unit_type: string | null; rent_amount: string | null; water_rate: string | null; garbage_fee: string | null; deposit: string | null; status: string | null }
-export interface ApiTenant { id: number; tenant_id: string; name: string; phone_number: string; email: string | null; id_number?: string; secondary_contact?: string; unit: number | null; due_date: number; entry_date: string; status: string }
+export interface ApiTenant { id: number; tenant_id: string; name: string; phone_number: string; email: string | null; id_number?: string; secondary_contact?: string; unit: number | null; due_date: number; entry_date: string; status: string; has_login?: boolean }
 export interface ApiLease { id: number; tenant: number; unit: number; start_date: string; end_date: string | null; rent_amount: string; deposit_amount: string; is_active: boolean }
 export interface ApiInvoice {
   id: string; invoice_no: string; tenant_pk: number; unit_pk: number; period_key: string; issued_on: string; due_date: string;
@@ -29,7 +29,7 @@ const num = (v: string | number | null | undefined) => Number(v ?? 0) || 0;
 
 export const mapLandlord = (l: ApiLandlord): Landlord => ({
   id: l.id, code: l.landlord_id, name: l.name, phone: l.phone_number, email: l.email ?? "",
-  bank: l.bank_name ?? "", accountNumber: l.account_number ?? "", isActive: l.is_active,
+  bank: l.bank_name ?? "", accountNumber: l.account_number ?? "", isActive: l.is_active, hasLogin: l.has_login ?? false,
 });
 
 const PROPERTY_STATUS: PropertyStatus[] = ["active", "inactive", "under_maintenance"];
@@ -51,7 +51,7 @@ export function mapUnit(u: ApiUnit, occupied: Set<number>): Unit {
 
 const TENANT_STATUS: TenantStatus[] = ["active", "vacated", "suspended"];
 export const mapTenant = (t: ApiTenant): Tenant => ({
-  id: t.id, code: t.tenant_id, name: t.name, phone: t.phone_number, email: t.email ?? "", idNumber: t.id_number ?? "", secondaryContact: t.secondary_contact ?? "", unitId: t.unit,
+  id: t.id, code: t.tenant_id, name: t.name, phone: t.phone_number, email: t.email ?? "", idNumber: t.id_number ?? "", secondaryContact: t.secondary_contact ?? "", unitId: t.unit, hasLogin: t.has_login ?? false,
   dueDay: t.due_date, entryDate: t.entry_date,
   status: TENANT_STATUS.includes(t.status as TenantStatus) ? (t.status as TenantStatus) : "active",
 });

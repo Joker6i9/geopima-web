@@ -103,13 +103,13 @@ export const loadTenantData = cache(async (): Promise<Data> => {
 
   return {
     agency: { name: lease.agency.name, slogan: "", phone: lease.agency.phone, email: lease.agency.email, address: "", paybill: home.payment.paybill },
-    landlords: [{ id: 1, code: "", name: lease.landlord ?? "", phone: "", email: "", bank: "", accountNumber: "", isActive: true }],
+    landlords: [{ id: 1, code: "", name: lease.landlord ?? "", phone: "", email: "", bank: "", accountNumber: "", isActive: true, hasLogin: true }],
     properties: [...propertyId].map(([name, id]) => ({
       id, code: "", name, landlordId: 1, location: lease.unit?.property === name ? lease.unit.location : "", cluster: "", commissionPct: 0, defaults: { deposit: 0, water: 0, garbage: 0 }, status: "active" as const,
     })),
     units: [...units.values()],
     tenants: [{
-      id: tenantId, code: home.tenant.code, name: home.tenant.name, phone: lease.tenant.phone, email: lease.tenant.email ?? "", idNumber: "", secondaryContact: "",
+      id: tenantId, code: home.tenant.code, name: home.tenant.name, phone: lease.tenant.phone, email: lease.tenant.email ?? "", idNumber: "", secondaryContact: "", hasLogin: true,
       unitId: home.tenant.unit ? currentUnitId : null, dueDay: lease.tenant.due_day, entryDate: lease.tenant.entry_date,
       status: (["active", "vacated", "suspended"].includes(home.tenant.status) ? home.tenant.status : "active") as "active",
     }],

@@ -21,6 +21,8 @@ Enter your username and password. You land in the portal that matches your accou
 
 An account with no role and no tenant or landlord link cannot sign in; an administrator must assign one.
 
+**Giving a tenant or landlord a login.** Open the tenant (People > Tenants) or landlord page and press **Create login**. The username and a one-time password appear in the window: press **Copy** and send them to the person. The password cannot be shown again; if it is lost, press **Reset login** to make a new one (the old one stops working). Tenants who have moved out cannot be given a login. Staff accounts are added in Settings instead.
+
 You can only open your own portal. Visiting another portal's address sends you back to yours.
 
 ### Layout common to every page
@@ -198,5 +200,6 @@ Sidebar: **Overview · Properties · Statements**. Landlords see only their own 
 | 2 Nov 2026 | **Downloads:** Excel, CSV and PDF on every main table (filters respected), plus tenant and landlord statements. **Editing:** tenants (with new ID number and second contact fields), landlords, properties (with standard charges for new units) and units can now be edited. Dashboard gained *no invoice this month* and *invalid phone* alerts. Needs the Django tenant-field migration (`tenants` 0004) and the property-edit fix (a property's code no longer changes when edited). |
 | 2 Nov 2026 | Settings are now editable: staff (add, change role, reset password, deactivate), collection banks, vote heads (add, rename, reorder, retire) and SMS templates. Needs the Django staff-update changes. |
 | 2 Nov 2026 | **Record payment** (cash, bank, cheque) added to Money > Payments, the tenant page and unpaid invoices; M-Pesa tab renamed Payments, with a "paid by" column. **Messages** tab added under People: bulk SMS to tenants who owe, all tenants, one property or landlords, with personalised fields, preview, confirmation and a sent log. Needs the matching Django changes (`communication` app, `/mpesa/transactions/record/`). |
+| 3 Nov 2026 | **Create login** button on every tenant and landlord page: makes their portal account, links it to the record and shows a one-time password to hand over (**Reset login** if it is lost). Needs the Django changes (`/tenants/tenants/<id>/login/`, `/properties/landlords/<id>/login/`, `has_login`). |
 | 29 Oct 2026 | Demo data removed. All three portals and every admin action now read and write the Django API. Invoice and deposit ids are Django UUIDs. The "Demo data" badge and demo sign-in buttons are gone. Signing in fails, instead of defaulting to admin, when the backend cannot say which portal an account belongs to. The agency paybill is no longer editable here: it is set on the server (`MPESA_PAYBILL`). |
 | 24 Oct 2026 | Admin actions: move in, vacate, suspend/reactivate, raise invoice, assign unmatched M-Pesa payment, refund deposit, add landlord / property / unit, edit agency profile. Demo data is now changeable in memory. Global search (⌘K) added to the admin header. |
